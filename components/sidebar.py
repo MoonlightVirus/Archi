@@ -231,18 +231,17 @@ def _inject_sidebar_css():
 
     /* ---------------- 5. Bottom Profile & Logout Section ---------------- */
     [data-testid="stSidebar"] [data-testid="stHorizontalBlock"]:has(.profile-avatar-marker) {{
-        background: #000000 !important;
+        background: transparent !important;
         padding: 1rem !important;
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        //background: transparent !important;
         margin-top: 0.5rem !important;
     }}
 
     [data-testid="stSidebar"] [data-testid="stColumn"]:has(.profile-avatar-marker) {{
-    background: #000000 !important;
         display: flex !important;
+        margin-left: -1.9rem !important;
         align-items: center !important;
         justify-content: center !important;
     }}
@@ -259,13 +258,13 @@ def _inject_sidebar_css():
     }}
 
     .profile-text-container {{
-        background: #000000 !important;
         display: flex !important;
         margin-bottom: 10px !important;
+        margin-left: -5px !important;
         flex-direction: column !important;
         justify-content: center !important;
         line-height: 1.2 !important;
-        //background: transparent !important;
+        background: transparent !important;
     }}
 
     .profile-name {{
@@ -288,7 +287,6 @@ def _inject_sidebar_css():
 
     /* Column 3 Logout Button Container */
     [data-testid="stSidebar"] [data-testid="stColumn"]:has(.logout-col-marker) {{
-        background: #000000 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
@@ -307,6 +305,7 @@ def _inject_sidebar_css():
         min-height: 36px !important;
         padding: 0 !important;
         margin: 0 !important;
+        margin-left: 1.5rem !important;
         cursor: pointer !important;
         transition: transform 0.2s ease, opacity 0.2s ease !important;
     }}
