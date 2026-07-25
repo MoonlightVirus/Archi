@@ -3,6 +3,8 @@ import base64
 import os
 import html
 import time
+from state import bot_reply
+
 
 def get_image_base64(image_path):
     """Reads a local image and converts it to a base64 string for CSS injection."""
@@ -440,12 +442,23 @@ def render_chat():
     # 3. Handle Delayed AI Reply
     if st.session_state.get("awaiting_reply"):
         st.session_state.awaiting_reply = False
+
+        # Grab the most recent user text message to respond to
+        last_user_msg = ""
+        for msg in reversed(current_chat["messages"]):
+            if isinstance(msg, dict) and msg.get("role") == "user" and "content" in msg:
+                last_user_msg = msg["content"]
+                break
+
         with st.spinner("Archi is thinking..."):
             time.sleep(1.2)
 
+        reply_text = bot_reply(last_user_msg) if last_user_msg else \
+            "I received your file! Let me take a look."
+
         current_chat["messages"].append({
             "role": "assistant",
-            "content": "Okay! I understand your situation, allow me to help! Please upload your flowchart first and I will analyze and provide suggestions!"
+            "content": reply_text
         })
         st.rerun()
 

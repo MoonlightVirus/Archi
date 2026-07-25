@@ -5,6 +5,8 @@ Swap the sample data here for real API/database calls when wiring up a backend.
 
 import streamlit as st
 import uuid
+from chatbot_engine import get_response as archi_get_response
+
 
 DEFAULT_PROFILE = {
     "name": "Juan Dela Cruz",
@@ -107,10 +109,13 @@ def bot_reply(user_msg):
     """Placeholder rule-based reply — swap for a real backend/LLM call."""
     msg = user_msg.lower()
     p = st.session_state.profile
+    """
     if "flowchart" in msg or "curriculum" in msg:
         return "Please upload your flowchart first and I will analyze and provide suggestions!"
     if "gpa" in msg:
         return f"Your current GPA is {p['gpa']:.1f} ({p['status']}). Want me to help you plan a recovery strategy?"
     if "consult" in msg or "advisor" in msg:
         return f"Your current advisor is {p['advisor']}. I can help you book a consultation — just head to Book a Consultation."
-    return "Got it! I'm a demo version of Archi for this frontend — connect me to a real backend for live academic guidance."
+    """
+    
+    return archi_get_response(user_msg)
