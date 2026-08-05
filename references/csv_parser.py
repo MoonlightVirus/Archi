@@ -4,13 +4,13 @@ import functools
 
 def parse_csv_rules(filepath):
     """
-    Parses the student rules CSV file and returns the data.
-    Demonstrates reading and structuring the data.
+    Parses the student rules CSV file and returns a hierarchical dictionary where 
+    main rules contain their respective sub-rules.
     """
-    rules_data = []
+    rules_dict = {}
     
     try:
-        with open(filepath, mode='r', encoding='utf-8') as file:
+        with open(filepath, mode='r', encoding='utf-8-sig') as file:
             # Create a CSV reader object, treating the first row as headers
             csv_reader = csv.DictReader(file)
             
@@ -22,17 +22,24 @@ def parse_csv_rules(filepath):
                 sub_rule = row.get('Sub-Rule', '').strip()
                 rule_text = row.get('Rule Text', '').strip()
                 
-                # Append the parsed data as a dictionary to the list
-                rules_data.append({
-                    'Section Number': section_num,
-                    'Section Title': section_title,
-                    'Main Rule': main_rule,
-                    'Sub-Rule': sub_rule,
-                    'Rule Text': rule_text
-                })
+                # If this main rule is not in our dictionary yet, initialize it
+                if main_rule not in rules_dict:
+                    rules_dict[main_rule] = {
+                        'Section Number': section_num,
+                        'Section Title': section_title,
+                        'Rule Text': '',
+                        'Sub-Rules': {}
+                    }
                 
-        print(f"Successfully parsed {len(rules_data)} rules from {filepath}.")
-        return rules_data
+                # If there is no sub-rule, this is the main rule's text
+                if not sub_rule:
+                    rules_dict[main_rule]['Rule Text'] = rule_text
+                # If there is a sub-rule, add it to the sub-rules dictionary
+                else:
+                    rules_dict[main_rule]['Sub-Rules'][sub_rule] = rule_text
+                
+        print(f"Successfully parsed {len(rules_dict)} main rules from {filepath}.")
+        return rules_dict
 
     except FileNotFoundError:
         print(f"Error: The file {filepath} was not found.")
@@ -41,100 +48,15 @@ def parse_csv_rules(filepath):
         print(f"An unexpected error occurred: {e}")
         return None
 
-# Helper function to group rules by section
-def _group_rules_by_section(rules_data):
-    """Groups parsed CSV data by main rule and section."""
-    grouped_rules = {}
-    for r in rules_data:
-        rule_text = r.get('Rule Text', '').strip()
-        if not rule_text:
-            continue
-            
-        main_rule = r.get('Main Rule', '').strip()
-        sub_rule = r.get('Sub-Rule', '').strip()
-        section_num = r.get('Section Number', '').strip()
-        section_title = r.get('Section Title', '').strip()
-        
-        key = (main_rule, section_num, section_title)
-        
-        if key not in grouped_rules:
-            grouped_rules[key] = {'main_text': '', 'sub_rules': []}
-            
-        if not sub_rule:
-            grouped_rules[key]['main_text'] = rule_text
-        else:
-            grouped_rules[key]['sub_rules'].append((sub_rule, rule_text))
-            
-    return grouped_rules
-
-# Helper function to format a single grouped rule
-def _format_rule_group(main_rule, section_num, section_title, data):
-    """Formats a single grouped rule into a string response."""
-    response_lines = [f"{section_title}"]
-    
-    if data['main_text']:
-        response_lines.append(f"Rule: {data['main_text']}")
-        
-    for sub, text in data['sub_rules']:
-        response_lines.append(f"  - {sub}: {text}")
-        
-    return "\n".join(response_lines).replace("%", " percent")
-
-# Helper function to categorize formatted rules 
-def _categorize_formatted_rules(grouped_rules):
-    """Categorizes formatted strings into specific rule categories."""
-    _ruleCreditGradingRetention = []
-    _ruleTrimestralHonors = []
-    _ruleGraduation = []
-    
-    for (main_rule, section_num, section_title), data in grouped_rules.items():
-        response_str = _format_rule_group(main_rule, section_num, section_title, data)
-        
-        if "Credit, Grading, and Retention" in section_title:
-            _ruleCreditGradingRetention.append(response_str)
-        elif "Trimestral Honors" in section_title:
-            _ruleTrimestralHonors.append(response_str)
-        elif "Graduation" in section_title:
-            _ruleGraduation.append(response_str)
-            
-    return _ruleCreditGradingRetention, _ruleTrimestralHonors, _ruleGraduation
-
-# Main function to parse and format the rules (cached for performance)
-@functools.lru_cache(maxsize=1)
-def get_formatted_rules(filepath):
-    """
-    Parses the student rules CSV file and formats them into a list of strings
-    suitable for chatbot responses.
-    """
-    rules_data = parse_csv_rules(filepath)
-    if not rules_data:
-        return []
-
-    grouped_rules = _group_rules_by_section(rules_data)
-    return _categorize_formatted_rules(grouped_rules)
-
-@functools.lru_cache(maxsize=1)
-def get_rules_dict(filepath):
-    """
-    Parses the student rules CSV file and returns a dictionary mapping
-    the main rule number (e.g., '10.1') to its formatted text string.
-    """
-    rules_data = parse_csv_rules(filepath)
-    if not rules_data:
-        return {}
-
-    grouped_rules = _group_rules_by_section(rules_data)
-    
-    formatted_dict = {}
-    for (main_rule, section_num, section_title), data in grouped_rules.items():
-        formatted_dict[main_rule] = _format_rule_group(main_rule, section_num, section_title, data)
-        
-    return formatted_dict
-
 # This allows you to test the script directly
 if __name__ == '__main__':
-    _rules_dict = get_rules_dict('references/HandbookRules.csv')
+    _rules_dict = parse_csv_rules('references/HandbookRules.csv')
     
-    for key, value in _rules_dict.items():
-        print(key, value)
+    for main_rule_num, rule in _rules_dict.items():
+        print(f"{main_rule_num}: {rule['Rule Text']}")
+        print("Sub-Rules:")
+        for sub_id, sub_text in rule['Sub-Rules'].items():
+            print(f"  {sub_id}: {sub_text}")
         print()
+
+        

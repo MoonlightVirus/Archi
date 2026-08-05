@@ -19,7 +19,7 @@ pattern first.
 from datetime import datetime, date
 import os
 from nltk.chat.util import Chat, reflections
-from references.csv_parser import get_formatted_rules, get_rules_dict
+from references.csv_parser import parse_csv_rules
 
 # ==========================================================
 # 1. MARTHY — Flowcharts & Consultation (specific intents)
@@ -113,56 +113,7 @@ _renee_broad_fallback_pairs = [
 # ==========================================================
 # 3. HandbookRules — References the Handbook rulebook from regex queries
 # ==========================================================
-
-_csv_path = os.path.join(os.path.dirname(__file__), 'references', 'HandbookRules.csv')
-_rules_dict = get_rules_dict(_csv_path)
-
-def _get_rules(*rule_numbers):
-    """Helper to join multiple rules together if a regex maps to multiple rules."""
-    return ["\n\n".join(filter(None, [_rules_dict.get(num, '') for num in rule_numbers]))]
-
-_handbookRules = [
-    [r'(.*)\b(?:units?|load|full-time|overload)\b(.*)',
-     _get_rules('10.1', '10.2')],
-    [r'(.*)\b(?:grading system|grades?|pass(?:ed|ing)?|fail(?:ed|ing|ure)?|deferred)\b(.*)',
-     _get_rules('10.3', '10.4')],
-    [r'(.*)\b(?:gpa|cgpa)\b(.*)',
-     _get_rules('10.5', '10.6', '10.7', '10.9')],
-    [r'(.*)\b(?:transferees?|second degree)\b(.*)',
-     _get_rules('10.8')],
-    [r'(.*)\b(?:lecture|laboratory|co-requisite)\b(.*)',
-     _get_rules('10.10')],
-    [r'(.*)\b(?:drop(?:ping)?|refunds?)\b(.*)',
-     _get_rules('10.11')],
-    [r'(.*)\b(?:change of grade|petition)\b(.*)',
-     _get_rules('10.12')],
-    [r'(.*)\b(?:enrollment|enrolled|section)\b(.*)',
-     _get_rules('10.13')],
-    [r'(.*)\b(?:audit)\b(.*)',
-     _get_rules('10.14', '10.15', '10.16')],
-    [r'(.*)\b(?:eligibl[ey]|ineligibl[ey]|retention|shift(?:ing)?)\b(.*)',
-     _get_rules('10.17')],
-    [r'(.*)\b(?:exceeded terms?|maximum terms?)\b(.*)',
-     _get_rules('10.18')],
-    [r'(.*)\b(?:nstp)\b(.*)',
-     _get_rules('10.19')],
-    [r'(.*)\b(?:special class(?:es)?|course equivalent)\b(.*)',
-     _get_rules('10.20', '10.21')],
-    [r'(.*)\b(?:dean\'?s list)\b(.*)',
-     _get_rules('11.1')],
-    [r'(.*)\b(?:university honors? list)\b(.*)',
-     _get_rules('11.2')],
-    [r'(.*)\b(?:honors?|jose rizal|trimestral honors?)\b(.*)',
-     _get_rules('11.3', '11.4', '11.5', '11.6', '11.7')],
-    [r'(.*)\b(?:graduat(?:ion|e|ing)?|finish(?:ing)?)\b(.*)',
-     _get_rules('12.1', '12.2')],
-    [r'(.*)\b(?:jose rizal honors? award)\b(.*)',
-     _get_rules('12.3')],
-    [r'(.*)\b(?:cum laude|magna cum laude|summa cum laude|honorable mention|graduation honors?)\b(.*)',
-     _get_rules('12.4')],
-    [r'(.*)\b(?:loyalty awards?)\b(.*)',
-     _get_rules('12.5')]
-]
+_handbookRules = []
 
 # ==========================================================
 # 4. LOUIS — Greetings, empathy, enders (broad catch-alls)
