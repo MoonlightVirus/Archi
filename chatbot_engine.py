@@ -39,14 +39,15 @@ _curriculum_context = {
 # ==========================================================
 # 2. INTENT RESPONSES (NLG Dictionary)
 # ==========================================================
-_intent_responses_path = os.path.join(_pipeline_dir, 'intent_responses.json')
+_responses_dir = os.path.join(_project_root, 'responses')
+_intent_responses_path = os.path.join(_responses_dir, 'intent_responses.json')
 with open(_intent_responses_path, 'r') as f:
     INTENT_RESPONSES = json.load(f)
 
 # ==========================================================
 # 3. FALLBACK REGEX PAIRS (NLTK Chat)
 # ==========================================================
-_fallback_pairs_path = os.path.join(_pipeline_dir, 'fallback_regex_pairs.json')
+_fallback_pairs_path = os.path.join(_responses_dir, 'fallback_regex_pairs.json')
 with open(_fallback_pairs_path, 'r') as f:
     _fallback_pairs = json.load(f)
 
@@ -63,9 +64,8 @@ FALLBACK_RESPONSE = (
 _csv_path = os.path.join(_project_root, 'references', 'HandbookRules.csv')
 _rules_dict = parse_csv_rules(_csv_path) or {}
 
-_intent_rule_map_path = os.path.join(_pipeline_dir, 'intent_to_rule_map.json')
-with open(_intent_rule_map_path, 'r') as f:
-    intent_to_rule_map = json.load(f)
+_intent_rule_map_path = os.path.join(_responses_dir, 'intent_to_rule_map.json')
+_classifier = IntentClassifier(intent_rule_map_path=_intent_rule_map_path)
 
 def extract_intent_and_entities(features):
     """

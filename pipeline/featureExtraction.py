@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from nltk.tree import Tree
+import itertools
 
 class FeatureExtractor:
     def __init__(self, json_path='academic_entities.json', binding_rules_path='binding_rules.json'):
@@ -11,16 +11,17 @@ class FeatureExtractor:
         self.syntactical_constraints = binding_data.get('syntactical_constraints', {})
         
         # Create an inverted dictionary: lowercase n-gram phrase -> category
-        self.phrase_to_category = {}
-        self.max_ngram = 1
+        self.phrase_to_category, self.max_ngram = self._build_inverted_dictionary()
+
+    def _build_inverted_dictionary(self):
+        phrase_to_category = {}
+        max_ngram = 1
         for category, phrases in self.entity_dict.items():
             for phrase in phrases:
-                lower_phrase = phrase.lower()
-                phrase_set = frozenset(lower_phrase.split())
-                self.phrase_to_category[phrase_set] = category
-                phrase_len = len(phrase_set)
-                if phrase_len > self.max_ngram:
-                    self.max_ngram = phrase_len
+                phrase_set = frozenset(phrase.lower().split())
+                phrase_to_category[phrase_set] = category
+                max_ngram = max(max_ngram, len(phrase_set))
+        return phrase_to_category, max_ngram
 
     def _load_json(self, json_path):
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -31,212 +32,163 @@ class FeatureExtractor:
     def extract_features(self, preprocessed_data):
         tokens = preprocessed_data['tokens']
         pos_tags = preprocessed_data['pos_tags']
-        named_entities = preprocessed_data['named_entities']
         cleaned_tokens = preprocessed_data['cleaned_tokens']
         cleaned_token_indices = preprocessed_data['cleaned_token_indices']
 
+        # 1. Dictionary Matching
+        extracted_entities, matched_cleaned_indices, matched_token_indices = self._match_dictionary(
+            preprocessed_data
+        )
+
+        # 2. Fallback for NNP sequences (Person names)
+        self._match_nnp_fallback(tokens, pos_tags, matched_token_indices, extracted_entities)
+
+        # Sort extracted entities by their position in the text
+        extracted_entities.sort(key=lambda x: x['indices'][0])
+
+        # 3. Parameter Binding
+        bound_entities = self._bind_parameters(extracted_entities, pos_tags)
+
+        # 4. Filter bound entities and separate unmapped parameters
+        final_entities, unmapped_parameters = self._filter_and_separate_entities(bound_entities)
+
+        return {
+            'entities': final_entities,
+            'unmapped_parameters': unmapped_parameters
+        }
+
+    def _is_unmapped_fallback(self, e):
+        return e.get('source') == 'ner_fallback' and e.get('type') != 'bound_parameter'
+
+    def _filter_and_separate_entities(self, bound_entities):
+        final_entities = list(filter(lambda e: not self._is_unmapped_fallback(e), bound_entities))
+        unmapped_parameters = [
+            {'entity': e['entity'], 'type': e['category'], 'indices': e['indices']}
+            for e in filter(self._is_unmapped_fallback, bound_entities)
+        ]
+        return final_entities, unmapped_parameters
+
+    def _match_dictionary(self, preprocessed_data):
         extracted_entities = []
         matched_cleaned_indices = set()
         matched_token_indices = set()
 
-        # 1. Dictionary Matching
-        # Construct N overlapping sequences from max_ngram down to 1
+        cleaned_tokens = preprocessed_data['cleaned_tokens']
+
         for n in range(self.max_ngram, 0, -1):
             for i in range(len(cleaned_tokens) - n + 1):
-                # Prevent sub-phrases from matching if a longer n-gram already matched
-                if all((i + j) in matched_cleaned_indices for j in range(n)):
-                    continue
-                
-                ngram_tokens = cleaned_tokens[i:i+n]
-                ngram_set = frozenset(t.lower() for t in ngram_tokens)
-                
-                if len(ngram_set) != n:
-                    continue
-                
-                if ngram_set in self.phrase_to_category:
-                    category = self.phrase_to_category[ngram_set]
-                    orig_indices = [cleaned_token_indices[i+j] for j in range(n)]
-                    
-                    # 2. Syntactical Disambiguation: Keyword Overlap
-                    if self._validate_pos_constraints(category, ngram_tokens, orig_indices, pos_tags):
-                        ngram_phrase = " ".join(ngram_tokens).lower()
-                        extracted_entities.append({
-                            'entity': ngram_phrase,
-                            'category': category,
-                            'indices': orig_indices,
-                            'source': 'dictionary'
-                        })
-                        for j in range(n):
-                            matched_cleaned_indices.add(i + j)
-                        matched_token_indices.update(orig_indices)
+                entity = self._process_ngram(
+                    n, i, preprocessed_data, matched_cleaned_indices
+                )
+                if entity:
+                    extracted_entities.append(entity)
+                    matched_cleaned_indices.update(range(i, i + n))
+                    matched_token_indices.update(entity['indices'])
 
-        # 3. Named Entity Recognition (NER)
-        current_token_idx = 0
-        for chunk in named_entities:
-            if isinstance(chunk, Tree):
-                label = chunk.label()
-                chunk_leaves = chunk.leaves()
-                chunk_len = len(chunk_leaves)
-                
-                if label in ['PERSON', 'ORGANIZATION']:
-                    is_matched = any((current_token_idx + j) in matched_token_indices for j in range(chunk_len))
-                    if not is_matched:
-                        entity_text = " ".join([leaf[0] for leaf in chunk_leaves])
-                        orig_indices = list(range(current_token_idx, current_token_idx + chunk_len))
-                        extracted_entities.append({
-                            'entity': entity_text,
-                            'category': label,
-                            'indices': orig_indices,
-                            'source': 'ner'
-                        })
-                        matched_token_indices.update(orig_indices)
-                current_token_idx += chunk_len
-            else:
-                current_token_idx += 1
+        return extracted_entities, matched_cleaned_indices, matched_token_indices
 
-        # 3.5 Fallback for NNP sequences not caught by NER as PERSON
-        nnp_indices = []
-        for i, (word, pos) in enumerate(pos_tags):
-            if pos == 'NNP' and i not in matched_token_indices:
-                nnp_indices.append(i)
-                
-        if nnp_indices:
-            groups = []
-            curr_group = [nnp_indices[0]]
-            for idx in nnp_indices[1:]:
-                if idx == curr_group[-1] + 1:
-                    curr_group.append(idx)
-                else:
-                    groups.append(curr_group)
-                    curr_group = [idx]
-            groups.append(curr_group)
-            
-            for group in groups:
-                entity_text = " ".join([tokens[idx] for idx in group])
-                extracted_entities.append({
-                    'entity': entity_text,
-                    'category': 'PERSON',
-                    'indices': group,
-                    'source': 'ner_fallback'
-                })
-                matched_token_indices.update(group)
+    def _process_ngram(self, n, i, preprocessed_data, matched_cleaned_indices):
+        if not matched_cleaned_indices.isdisjoint(range(i, i + n)):
+            return None
 
-        # Sort extracted entities by their position in the text
-        extracted_entities.sort(key=lambda x: x['indices'][0])
-        
-        # 4. Parameter Binding
+        cleaned_tokens = preprocessed_data['cleaned_tokens']
+        ngram_tokens = cleaned_tokens[i:i+n]
+        ngram_set = frozenset(map(str.lower, ngram_tokens))
+
+        if len(ngram_set) != n or ngram_set not in self.phrase_to_category:
+            return None
+
+        category = self.phrase_to_category[ngram_set]
+        orig_indices = preprocessed_data['cleaned_token_indices'][i:i+n]
+
+        if self._validate_pos_constraints(category, ngram_tokens, orig_indices, preprocessed_data['pos_tags']):
+            ngram_phrase = " ".join(ngram_tokens).lower()
+            return {
+                'entity': ngram_phrase,
+                'category': category,
+                'indices': orig_indices,
+                'source': 'dictionary'
+            }
+        return None
+
+    def _match_nnp_fallback(self, tokens, pos_tags, matched_token_indices, extracted_entities):
+        nnp_indices = [i for i, (word, pos) in enumerate(pos_tags) if pos == 'NNP' and i not in matched_token_indices]
+
+        if not nnp_indices:
+            return
+
+        groups = self._group_consecutive_indices(nnp_indices)
+        for group in groups:
+            entity_text = " ".join([tokens[idx] for idx in group])
+            extracted_entities.append({
+                'entity': entity_text,
+                'category': 'PERSON',
+                'indices': group,
+                'source': 'ner_fallback'
+            })
+            matched_token_indices.update(group)
+
+    def _group_consecutive_indices(self, indices):
+        return [list(map(lambda x: x[1], g)) for k, g in itertools.groupby(enumerate(indices), lambda x: x[0] - x[1])]
+
+    def _bind_parameters(self, extracted_entities, pos_tags):
         bound_entities = []
-        skip_next = False
-        for i in range(len(extracted_entities)):
-            if skip_next:
-                skip_next = False
-                continue
-                
+        i = 0
+        while i < len(extracted_entities):
             curr = extracted_entities[i]
             if i + 1 < len(extracted_entities):
                 nxt = extracted_entities[i+1]
-                
-                # Check against binding rules
-                bound = False
-                for rule in self.binding_rules:
-                    if curr['category'] == rule['action_category'] and nxt['category'] == rule['target_category']:
-                        # Ensure proximity
-                        if curr['indices'][-1] < nxt['indices'][0]:
-                            curr_pos = pos_tags[curr['indices'][-1]][1]
-                            nxt_pos = pos_tags[nxt['indices'][0]][1]
-                            
-                            action_pos_prefixes = rule.get('action_pos', [])
-                            target_pos_prefixes = rule.get('target_pos', [])
-                            
-                            valid_action = not action_pos_prefixes or any(curr_pos.startswith(p) for p in action_pos_prefixes)
-                            valid_target = not target_pos_prefixes or any(nxt_pos.startswith(p) for p in target_pos_prefixes)
-                            
-                            if valid_action and valid_target:
-                                bound_entities.append({
-                                    'action': curr['category'],
-                                    'action_entity': curr['entity'],
-                                    'target_category': nxt['category'],
-                                    'target_entity': nxt['entity'],
-                                    'indices': curr['indices'] + nxt['indices'],
-                                    'type': 'bound_parameter'
-                                })
-                                bound = True
-                                skip_next = True
-                                break
-                
-                if bound:
+                bound_entity = self._attempt_binding(curr, nxt, pos_tags)
+                if bound_entity:
+                    bound_entities.append(bound_entity)
+                    i += 2
                     continue
-            
             bound_entities.append(curr)
-            
-        # 5. Dynamic Course Codes
-        all_matched_indices = set()
-        for e in bound_entities:
-            all_matched_indices.update(e['indices'])
-            
-        dynamic_course_codes = []
-        for i, token in enumerate(tokens):
-            if i in all_matched_indices:
-                continue
-                
-            # Pattern: alphanumeric density (letters and numbers) and capitalization
-            if re.match(r'^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]+$', token) and any(c.isupper() for c in token):
-                # Check adjacency to ENROLLMENT_TERM or GRADING_TERM
-                is_adjacent = False
-                for e in bound_entities:
-                    cat = e.get('category')
-                    if cat in ['ENROLLMENT_TERM', 'GRADING_TERM']:
-                        dist = min(abs(i - idx) for idx in e['indices'])
-                        if dist <= 3:
-                            is_adjacent = True
-                            break
-                            
-                if is_adjacent:
-                    dynamic_course_codes.append({
-                        'entity': token,
-                        'category': 'COURSE_CODE',
-                        'indices': [i],
-                        'source': 'dynamic'
-                    })
-                    all_matched_indices.add(i)
+            i += 1
+        return bound_entities
 
-        # 6. Filter bound entities and separate unmapped parameters
-        final_entities = []
-        unmapped_parameters = []
-        for e in bound_entities:
-            if e.get('source') == 'ner' and e.get('type') != 'bound_parameter':
-                unmapped_parameters.append({
-                    'entity': e['entity'],
-                    'type': e['category'],
-                    'indices': e['indices']
-                })
-            else:
-                final_entities.append(e)
-
-        return {
-            'entities': final_entities + dynamic_course_codes,
-            'unmapped_parameters': unmapped_parameters
-        }
+    def _attempt_binding(self, curr, nxt, pos_tags):
+        if curr['indices'][-1] >= nxt['indices'][0]:
+            return None
+            
+        rule = next((r for r in self.binding_rules if curr['category'] == r['action_category'] and nxt['category'] == r['target_category']), None)
+        if rule:
+            return {
+                'action': curr['category'],
+                'action_entity': curr['entity'],
+                'target_category': nxt['category'],
+                'target_entity': nxt['entity'],
+                'indices': curr['indices'] + nxt['indices'],
+                'type': 'bound_parameter'
+            }
+        return None
 
     def _validate_pos_constraints(self, category, ngram_tokens, orig_indices, pos_tags):
         """Map JSON categories to rigid POS constraints dynamically."""
-        if category in self.syntactical_constraints:
-            constraint = self.syntactical_constraints[category]
+        if category not in self.syntactical_constraints:
+            return True
             
-            req_word = constraint.get("required_word")
-            req_pos_prefix = constraint.get("required_pos_prefix")
-            invalid_pos_prefix = constraint.get("invalid_pos_prefix")
+        constraint = self.syntactical_constraints[category]
+        if not self._validate_required_pos(constraint, ngram_tokens, orig_indices, pos_tags):
+            return False
             
-            if req_word and req_pos_prefix:
-                for j, t in enumerate(ngram_tokens):
-                    if t.lower() == req_word:
-                        orig_pos = pos_tags[orig_indices[j]][1]
-                        if not orig_pos.startswith(req_pos_prefix):
-                            return False
-                            
-            if invalid_pos_prefix:
-                for idx in orig_indices:
-                    if pos_tags[idx][1].startswith(invalid_pos_prefix):
-                        return False
-                        
-        return True
+        return self._validate_invalid_pos(constraint, orig_indices, pos_tags)
+
+    def _validate_required_pos(self, constraint, ngram_tokens, orig_indices, pos_tags):
+        req_word = constraint.get("required_word")
+        req_pos_prefix = constraint.get("required_pos_prefix")
+        if not (req_word and req_pos_prefix):
+            return True
+            
+        return all(
+            pos_tags[orig_indices[j]][1].startswith(req_pos_prefix)
+            for j, t in enumerate(ngram_tokens)
+            if t.lower() == req_word
+        )
+
+    def _validate_invalid_pos(self, constraint, orig_indices, pos_tags):
+        invalid_pos_prefix = constraint.get("invalid_pos_prefix")
+        if not invalid_pos_prefix:
+            return True
+            
+        return not any(pos_tags[idx][1].startswith(invalid_pos_prefix) for idx in orig_indices)

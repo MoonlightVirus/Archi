@@ -4,14 +4,11 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 from nltk.tag import pos_tag
-from nltk.chunk import ne_chunk
 
 nltk.download('punkt_tab', quiet=True)
 nltk.download('stopwords', quiet=True)
 nltk.download('wordnet', quiet=True)
 nltk.download('averaged_perceptron_tagger_eng', quiet=True)
-nltk.download('maxent_ne_chunker_tab', quiet=True)
-nltk.download('words', quiet=True)
 
 # Initialize the lemmatizer globally so it only loads into memory once
 _lemmatizer = WordNetLemmatizer()
@@ -47,10 +44,7 @@ def preprocess_text(text: str) -> dict:
     # 2. POS Tagging
     pos_tags = pos_tag(tokens)
     
-    # 3. NER (Named Entity Recognition)
-    named_entities = ne_chunk(pos_tags)
-    
-    # 4. Lemmatization
+    # 3. Lemmatization
     lemmatized_tokens = [
         _lemmatizer.lemmatize(token, get_wordnet_pos(tag)) 
         for token, tag in pos_tags
@@ -68,7 +62,6 @@ def preprocess_text(text: str) -> dict:
         "original_text": text,
         "tokens": tokens,
         "pos_tags": pos_tags,
-        "named_entities": named_entities,
         "lemmatized_tokens": lemmatized_tokens,
         "cleaned_tokens": cleaned_tokens,
         "cleaned_token_indices": cleaned_token_indices
