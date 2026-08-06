@@ -17,6 +17,7 @@ from pipeline.featureExtraction import FeatureExtractor
 import re
 from pipeline.curriculum_engine import CurriculumEngine
 #end
+from pipeline.intent_classifier import IntentClassifier
 
 # ==========================================================
 # 1. NLP Pipeline Initialization
@@ -69,77 +70,7 @@ _rules_dict = parse_csv_rules(_csv_path) or {}
 
 _intent_rule_map_path = os.path.join(_responses_dir, 'intent_to_rule_map.json')
 _classifier = IntentClassifier(intent_rule_map_path=_intent_rule_map_path)
-_intent_rule_map_path = os.path.join(_responses_dir, 'intent_to_rule_map.json')
-_classifier = IntentClassifier(intent_rule_map_path=_intent_rule_map_path)
 
-def extract_intent_and_entities(features):
-    """
-    Translates NLP pipeline extracted entities into an intent and entity dictionary
-    for the template responses.
-    """
-    entities = features.get('entities', [])
-
-    # 1. Check bound parameters (action + target)
-    for e in entities:
-        if e.get('type') == 'bound_parameter':
-            action = e.get('action')
-            target = e.get('target_entity')
-            target_cat = e.get('target_category')
-
-            if action in ['ACTION_SCHEDULE', 'ACTION_RESCHEDULE', 'ACTION_DEFER', 'ACTION_FAIL', 'CONSULTATION_TERM']:
-                return action, {'target': target}
-            elif action == 'ACTION_CANCEL':
-                if target_cat == 'PERSON':
-                    return 'ACTION_CANCEL', {'target': target}
-                elif target_cat == 'COURSE_CODE':
-                    return 'ACTION_ADVISE', {'action': 'drop'}
-                return 'ACTION_CANCEL', {'target': target}
-            elif action == 'ACTION_ADVISE':
-                return 'ACTION_ADVISE', {'action': 'underload'}
-
-    # 2. Check independent entities
-    categories = [e.get('category') for e in entities if 'category' in e]
-    entity_texts = {e.get('category'): e.get('entity') for e in entities if 'category' in e}
-
-    # added by chael
-    if (
-            'CURRICULUM_ACTION' in categories
-            and 'COURSE_CODE' in categories
-    ):
-        return 'CHECK_ELIGIBILITY', {
-            'target': entity_texts['COURSE_CODE']
-        }
-    # end
-
-    if 'ACTION_UPDATE' in categories and 'FLOWCHART_TERM' in categories:
-        return 'FLOWCHART_UPDATE', {}
-
-    if 'FLOWCHART_TERM' in categories and 'COURSE_CODE' in categories:
-        if "prerequisite" in entity_texts.get('FLOWCHART_TERM', '').lower():
-            return 'PREREQUISITE_CHECK', {'target': entity_texts['COURSE_CODE']}
-
-    if 'GPA_CALCULATE' in categories: return 'GPA_CALCULATE', {}
-    if 'GPA_UNDERSTAND' in categories: return 'GPA_UNDERSTAND', {}
-    if 'GPA_LOW_CONCERN' in categories: return 'GPA_LOW_CONCERN', {}
-    if 'GPA_IMPROVE' in categories: return 'GPA_IMPROVE', {}
-    if 'STATUS_CHECK' in categories:
-        target = entity_texts.get('COURSE_CODE', 'enrollment')
-        return 'STATUS_CHECK', {'target': target}
-
-    return None, {}
-
-#added by chael
-def extract_course_codes(features):
-    """
-    Extracts all course codes recognized in the user's message.
-    """
-
-    return list({
-        entity["entity"].upper()
-        for entity in features.get("entities", [])
-        if entity.get("category") == "COURSE_CODE"
-    })
-#end
 
 def get_response(user_input: str) -> str:
     """
@@ -183,7 +114,7 @@ def get_response(user_input: str) -> str:
             )
 
         if _curriculum_context["waiting_for"] == "passed_courses":
-            passed_courses = extract_course_codes(features)
+            passed_courses = _classifier.extract_course_codes(features)
 
             if not passed_courses:
                 return (
@@ -249,27 +180,18 @@ def get_response(user_input: str) -> str:
         print(features)
         print("===========================\n")
 
-        # 1. Check for Handbook Rules directly
-        extracted_categories = set()
-        for entity in features.get('entities', []):
-            if 'category' in entity:
-                extracted_categories.add(entity['category'])
-            elif 'action' in entity:
-                extracted_categories.add(entity['action'])
-
-        for cat in extracted_categories:
-            if cat in intent_to_rule_map:
-                rule_id = intent_to_rule_map[cat]
-                if _rules_dict and rule_id in _rules_dict:
-                    rule_data = _rules_dict[rule_id]
-                    response_text = f"According to the handbook, <b>Section {rule_id}: {rule_data['Section Title']}</b> states that:\n\n{rule_data['Rule Text']}\n"
-                    if rule_data.get('Sub-Rules'):
-                        for sub_id, sub_text in rule_data['Sub-Rules'].items():
-                            response_text += f"\n<b>{sub_id}</b>: {sub_text}\n"
-                    return response_text
-
-        # 2. Check Intent Responses
-        intent, entity_kwargs = extract_intent_and_entities(features)
+        # Check intents via IntentClassifier
+        intent, entity_kwargs = _classifier.classify_intent(features)
+        
+        if intent == 'HANDBOOK_RULE':
+            rule_id = entity_kwargs.get('rule_id')
+            if _rules_dict and rule_id in _rules_dict:
+                rule_data = _rules_dict[rule_id]
+                response_text = f"According to the handbook, <b>Section {rule_id}: {rule_data['Section Title']}</b> states that:\n\n{rule_data['Rule Text']}\n"
+                if rule_data.get('Sub-Rules'):
+                    for sub_id, sub_text in rule_data['Sub-Rules'].items():
+                        response_text += f"\n<b>{sub_id}</b>: {sub_text}\n"
+                return response_text
 
         #added by chael
         if intent == "CHECK_ELIGIBILITY":

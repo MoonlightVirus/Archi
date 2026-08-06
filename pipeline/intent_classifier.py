@@ -17,132 +17,18 @@ class IntentClassifier:
         if intent:
             return intent, data
 
-        categories = [
-            entity.get("category")
-            for entity in entities
-            if entity.get("category")
-        ]
-
-        entity_lookup = {
-            entity.get("category"): entity.get("entity")
-            for entity in entities
-            if entity.get("category")
-        }
-
-        # =====================================================
-        # 2. Bound actions
-        # =====================================================
-        for entity in entities:
-            if entity.get("type") != "bound_parameter":
-                continue
-
-            action = entity.get("action")
-            target = entity.get("target_entity")
-            target_category = entity.get("target_category")
-
-            if action == "ACTION_FAIL" and target_category == "COURSE_CODE":
-                return "ACTION_FAIL", {
-                    "target": target.upper() if target else None
-                }
-
-            if action == "ACTION_DEFER" and target_category == "COURSE_CODE":
-                return "ACTION_DEFER", {
-                    "target": target.upper() if target else None
-                }
-
-            if action in [
-                "ACTION_SCHEDULE",
-                "ACTION_RESCHEDULE",
-                "CONSULTATION_TERM"
-            ]:
-                return action, {
-                    "target": target
-                }
-
-            if action == "ACTION_CANCEL":
-                if target_category == "PERSON":
-                    return "ACTION_CANCEL", {
-                        "target": target
-                    }
-
-                if target_category == "COURSE_CODE":
-                    return "ACTION_ADVISE", {
-                        "action": "drop"
-                    }
-
-            if action == "ACTION_ADVISE":
-                return "ACTION_ADVISE", {
-                    "action": "underload"
-                }
-
-        # =====================================================
-        # 3. Curriculum intents
-        # =====================================================
-        course_code = entity_lookup.get("COURSE_CODE")
-
-        if course_code:
-            course_code = course_code.upper()
-
-            if "ACTION_FAIL" in categories:
-                return "ACTION_FAIL", {
-                    "target": course_code
-                }
-
-            if "ACTION_DEFER" in categories:
-                return "ACTION_DEFER", {
-                    "target": course_code
-                }
-
-            if "FLOWCHART_TERM" in categories:
-                return "PREREQUISITE_CHECK", {
-                    "course": course_code
-                }
-
-            if "CURRICULUM_ACTION" in categories:
-                return "CHECK_ELIGIBILITY", {
-                    "course": course_code
-                }
-
-            return "COURSE_INFO", {
-                "course": course_code
-            }
-
-        # =====================================================
-        # 4. Flowchart intents
-        # =====================================================
-        if (
-            "ACTION_UPDATE" in categories
-            and "FLOWCHART_TERM" in categories
-        ):
-            return "FLOWCHART_UPDATE", {}
-
-        # =====================================================
-        # 5. GPA intents
-        # =====================================================
-        if "GPA_CALCULATE" in categories:
-            return "GPA_CALCULATE", {}
-
-        if "GPA_UNDERSTAND" in categories:
-            return "GPA_UNDERSTAND", {}
-
-        if "GPA_LOW_CONCERN" in categories:
-            return "GPA_LOW_CONCERN", {}
-
-        if "GPA_IMPROVE" in categories:
-            return "GPA_IMPROVE", {}
-
-        # =====================================================
-        # 6. Status intent
-        # =====================================================
-        if "STATUS_CHECK" in categories:
-            return "STATUS_CHECK", {
-                "target": entity_lookup.get(
-                    "COURSE_CODE",
-                    "enrollment"
-                )
-            }
-
-        return None, {}
+        # 2. Check bound parameters (action + target)
+        intent, data = self._check_bound_parameters(entities)
+        if intent:
+            return intent, data
+            
+        # 3. Check curriculum intents
+        intent, data = self._check_curriculum_intents(entities)
+        if intent:
+            return intent, data
+            
+        # 4. Check independent entities
+        return self._check_independent_entities(entities)
 
     def _check_handbook_rules(self, entities: list):
         extracted_categories = set()
@@ -157,3 +43,77 @@ class IntentClassifier:
                 return 'HANDBOOK_RULE', {'rule_id': self.intent_to_rule_map[cat]}
                 
         return None, {}
+
+    def _check_bound_parameters(self, entities: list):
+        for e in entities:
+            if e.get('type') != 'bound_parameter':
+                continue
+                
+            action = e.get('action')
+            target = e.get('target_entity')
+            target_cat = e.get('target_category')
+            
+            if action in ['ACTION_SCHEDULE', 'ACTION_RESCHEDULE', 'ACTION_DEFER', 'ACTION_FAIL', 'CONSULTATION_TERM']:
+                return action, {'target': target}
+            
+            if action == 'ACTION_CANCEL':
+                if target_cat == 'COURSE_CODE':
+                    return 'ACTION_ADVISE', {'action': 'drop'}
+                return 'ACTION_CANCEL', {'target': target}
+                
+            if action == 'ACTION_ADVISE':
+                return 'ACTION_ADVISE', {'action': 'underload'}
+                
+        return None, {}
+
+    def _check_curriculum_intents(self, entities: list):
+        categories = set(e.get('category') for e in entities if 'category' in e)
+        entity_lookup = {e.get('category'): e.get('entity') for e in entities if 'category' in e}
+        
+        course_code = entity_lookup.get("COURSE_CODE")
+        if course_code:
+            course_code = course_code.upper()
+            
+            if "ACTION_FAIL" in categories:
+                return "ACTION_FAIL", {"target": course_code}
+                
+            if "ACTION_DEFER" in categories:
+                return "ACTION_DEFER", {"target": course_code}
+                
+            if "FLOWCHART_TERM" in categories:
+                return "PREREQUISITE_CHECK", {"target": course_code}
+                
+            if "CURRICULUM_ACTION" in categories:
+                return "CHECK_ELIGIBILITY", {"target": course_code}
+                
+            return "COURSE_INFO", {"target": course_code}
+            
+        return None, {}
+
+    def _check_independent_entities(self, entities: list):
+        categories = set(e.get('category') for e in entities if 'category' in e)
+        entity_texts = {e.get('category'): e.get('entity') for e in entities if 'category' in e}
+        
+        if 'ACTION_UPDATE' in categories and 'FLOWCHART_TERM' in categories:
+            return 'FLOWCHART_UPDATE', {}
+                
+        for gpa_intent in ['GPA_CALCULATE', 'GPA_UNDERSTAND', 'GPA_LOW_CONCERN', 'GPA_IMPROVE']:
+            if gpa_intent in categories:
+                return gpa_intent, {}
+                
+        if 'STATUS_CHECK' in categories:
+            target = entity_texts.get('COURSE_CODE', 'enrollment')
+            return 'STATUS_CHECK', {'target': target}
+            
+        return None, {}
+
+    @staticmethod
+    def extract_course_codes(features):
+        """
+        Extracts all course codes recognized in the user's message.
+        """
+        return list({
+            entity["entity"].upper()
+            for entity in features.get("entities", [])
+            if entity.get("category") == "COURSE_CODE"
+        })
