@@ -224,5 +224,72 @@
     "special honor",
     "major field honor",
     "department honor"
+  ],
+  "FLOWCHART_TERM": [
+    "flowchart",
+    "prerequisite",
+    "prerequisites"
+  ],
+  "ACTION_DEFER": [
+    "defer",
+    "deferring"
+  ],
+  "ACTION_FAIL": [
+    "fail",
+    "failed"
+  ],
+  "ACTION_UPDATE": [
+    "update",
+    "generate",
+    "create"
+  ],
+  "ACTION_ADVISE": [
+    "suggest action",
+    "suggest"
+  ],
+  "CONSULTATION_TERM": [
+    "consultation",
+    "consultation hours",
+    "availability"
+  ],
+  "ACTION_SCHEDULE": [
+    "schedule",
+    "book",
+    "set up"
+  ],
+  "ACTION_RESCHEDULE": [
+    "reschedule",
+    "move",
+    "change"
+  ],
+  "GPA_CALCULATE": [
+    "calculate my gpa",
+    "what is my gpa",
+    "gpa calculation",
+    "calculate gpa",
+    "compute gpa"
+  ],
+  "GPA_UNDERSTAND": [
+    "understand gpa",
+    "gpa policy",
+    "how does gpa work",
+    "what is gpa"
+  ],
+  "GPA_LOW_CONCERN": [
+    "low gpa concern",
+    "worried about gpa",
+    "gpa is low",
+    "low gpa"
+  ],
+  "GPA_IMPROVE": [
+    "improve my gpa",
+    "raise my gpa",
+    "bounce back my gpa",
+    "improve gpa",
+    "raise gpa"
+  ],
+  "STATUS_CHECK": [
+    "check my status",
+    "status"
   ]
 }

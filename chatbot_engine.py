@@ -20,10 +20,20 @@ from datetime import datetime, date
 import os
 from nltk.chat.util import Chat, reflections
 from references.csv_parser import parse_csv_rules
+from pipeline.preprocessor import preprocess_text
+from pipeline.featureExtraction import FeatureExtractor
 
 # ==========================================================
 # 1. MARTHY — Flowcharts & Consultation (specific intents)
 # ==========================================================
+_project_root = os.path.dirname(os.path.abspath(__file__))
+
+# Initialize the NLP pipeline extractor
+_pipeline_dir = os.path.join(_project_root, 'pipeline')
+_entities_path = os.path.join(_pipeline_dir, 'academic_entities.json')
+_binding_path = os.path.join(_pipeline_dir, 'binding_rules.json')
+_extractor = FeatureExtractor(json_path=_entities_path, binding_rules_path=_binding_path)
+
 _marthy_pairs = [
     # --- Flowcharts ---
     [r'(.*)(fetch|check|what are)(.*)prerequisite(s)? for (.*)',
@@ -111,9 +121,50 @@ _renee_broad_fallback_pairs = [
 ]
 
 # ==========================================================
-# 3. HandbookRules — References the Handbook rulebook from regex queries
+# 3. HandbookRules — Mapping from NLP Intents to CSV Rules
 # ==========================================================
-_handbookRules = []
+_project_root = os.path.dirname(os.path.abspath(__file__))
+_csv_path = os.path.join(_project_root, 'references', 'HandbookRules.csv')
+_rules_dict = parse_csv_rules(_csv_path) or {}
+
+intent_to_rule_map = {
+    "ACADEMIC_UNIT": "10.1",
+    "ACADEMIC_LOAD": "10.2",
+    "GRADING_TERM": "10.3",
+    "NON_ACADEMIC_GRADING": "10.4",
+    "GPA_INCLUSION": "10.5",
+    "GPA_TERM": "10.6",
+    "CROSS_ENROLLMENT": "10.7",
+    "STUDENT_TYPE": "10.8",
+    "GPA_ALL_GRADES": "10.9",
+    "COURSE_COMPONENT": "10.10",
+    "ACTION_CANCEL": "10.11",
+    "FINANCIAL_TERM": "10.11",
+    "ACTION_PETITION": "10.12",
+    "ENROLLMENT_TERM": "10.13",
+    "AUDIT_TERM": "10.14",
+    "AUDIT_GPA": "10.15",
+    "CONVERT_AUDIT": "10.16",
+    "RETENTION_TERM": "10.17",
+    "MAXIMUM_TENURE": "10.18",
+    "NSTP_TERM": "10.19",
+    "SPECIAL_COURSE": "10.20",
+    "COURSE_EQUIVALENT": "10.21",
+    "HONORS_LIST": "11.1",
+    "UNIVERSITY_HONORS": "11.2",
+    "HONORS_TERM": "11.3",
+    "HONORS_ABSENCES": "11.4",
+    "HONORS_PASS_FAIL": "11.5",
+    "HONORS_CLARIFICATION": "11.6",
+    "HONORS_ENROLLMENT": "11.7",
+    "GRADUATION_TERM": "12.1",
+    "GRADUATION_LAST_TERM": "12.2",
+    "JOSE_RIZAL_AWARD": "12.3",
+    "GRADUATION_HONORS": "12.4",
+    "AWARDS_TERM": "12.5",
+    "SPECIAL_AWARDS_GRAD": "12.6",
+    "SPECIAL_HONORS_MAJOR": "12.7"
+}
 
 # ==========================================================
 # 4. LOUIS — Greetings, empathy, enders (broad catch-alls)
@@ -151,7 +202,7 @@ _louis_pairs = [
 # ==========================================================
 # Merge order: specific intents first, broad catch-alls last
 # ==========================================================
-ALL_PAIRS = _marthy_pairs + _renee_pairs + _handbookRules + _louis_pairs + _renee_broad_fallback_pairs
+ALL_PAIRS = _marthy_pairs + _renee_pairs + _louis_pairs + _renee_broad_fallback_pairs
 
 _chatbot = Chat(ALL_PAIRS, reflections)
 
@@ -160,6 +211,56 @@ FALLBACK_RESPONSE = (
     "understand it correctly?"
 )
 
+
+def build_canonical_input(features, original_input):
+    """
+    Translates NLP pipeline extracted entities into a canonical string
+    that perfectly matches the existing regex patterns. This allows us 
+    to use the existing regex responses and `%` variable substitution.
+    """
+    entities = features.get('entities', [])
+    
+    # 1. Check bound parameters (action + target)
+    for e in entities:
+        if e.get('type') == 'bound_parameter':
+            action = e.get('action')
+            target = e.get('target_entity')
+            
+            if action == 'ACTION_SCHEDULE':
+                return f"schedule consultation with {target}"
+            elif action == 'ACTION_RESCHEDULE':
+                return f"reschedule consultation with {target}"
+            elif action == 'ACTION_CANCEL':
+                return f"cancel consultation with {target}"
+            elif action == 'CONSULTATION_TERM':
+                return f"consultation hours of {target}"
+            elif action == 'ACTION_DEFER':
+                return f"generate flowchart deferring {target}"
+            elif action == 'ACTION_FAIL':
+                return f"generate flowchart failed {target}"
+            elif action == 'ACTION_ADVISE':
+                return f"suggest action underload {target}"
+                
+    # 2. Check independent entities
+    categories = [e.get('category') for e in entities if 'category' in e]
+    entity_texts = {e.get('category'): e.get('entity') for e in entities if 'category' in e}
+    
+    if 'ACTION_UPDATE' in categories and 'FLOWCHART_TERM' in categories:
+        return "update flowchart"
+        
+    if 'FLOWCHART_TERM' in categories and 'COURSE_CODE' in categories:
+        if "prerequisite" in entity_texts['FLOWCHART_TERM'].lower():
+            return f"prerequisite for {entity_texts['COURSE_CODE']}"
+            
+    if 'GPA_CALCULATE' in categories: return "calculate my gpa"
+    if 'GPA_UNDERSTAND' in categories: return "understand gpa"
+    if 'GPA_LOW_CONCERN' in categories: return "low gpa concern"
+    if 'GPA_IMPROVE' in categories: return "improve my gpa"
+    if 'STATUS_CHECK' in categories:
+        target = entity_texts.get('COURSE_CODE', 'enrollment')
+        return f"check my {target} status"
+        
+    return original_input
 
 def get_response(user_input: str) -> str:
     """
@@ -170,5 +271,37 @@ def get_response(user_input: str) -> str:
     if not user_input or not user_input.strip():
         return FALLBACK_RESPONSE
 
-    response = _chatbot.respond(user_input)
+    canonical_input = user_input
+    
+    # Parse inputs using the pipeline
+    try:
+        preprocessed = preprocess_text(user_input)
+        features = _extractor.extract_features(preprocessed)
+        
+        # 1. Check for Handbook Rules directly
+        extracted_categories = set()
+        for entity in features.get('entities', []):
+            if 'category' in entity:
+                extracted_categories.add(entity['category'])
+            elif 'action' in entity:
+                extracted_categories.add(entity['action'])
+                
+        for cat in extracted_categories:
+            if cat in intent_to_rule_map:
+                rule_id = intent_to_rule_map[cat]
+                if _rules_dict and rule_id in _rules_dict:
+                    rule_data = _rules_dict[rule_id]
+                    response_text = f"According to the handbook, <b>Section {rule_id}: {rule_data['Section Title']}</b> states that:\n\n{rule_data['Rule Text']}\n"
+                    if rule_data.get('Sub-Rules'):
+                        for sub_id, sub_text in rule_data['Sub-Rules'].items():
+                            response_text += f"\n<b>{sub_id}</b>: {sub_text}\n"
+                    return response_text
+        
+        # 2. Translate extracted features into a canonical regex-matching string for other intents
+        canonical_input = build_canonical_input(features, user_input)
+    except Exception as e:
+        pass
+
+    response = _chatbot.respond(canonical_input)
+    print(response)
     return response if response is not None else FALLBACK_RESPONSE
