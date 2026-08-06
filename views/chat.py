@@ -3,7 +3,8 @@ import base64
 import os
 import html
 import time
-from state import bot_reply
+from state import bot_reply, detect_booking_intent, find_advisor, extract_booking_details
+from components.email_mockup import build_draft, prepare_email_draft
 
 
 def get_image_base64(image_path):
@@ -454,6 +455,24 @@ def render_chat():
 
         with st.spinner("Archi is thinking..."):
             time.sleep(1.2)
+
+        # Booking intent -> prep a consultation email draft and redirect to it.
+        if detect_booking_intent(last_user_msg):
+            advisor = find_advisor(last_user_msg) or st.session_state.profile.get("advisor")
+            details = extract_booking_details(last_user_msg)
+            st.session_state.selected_advisor = advisor
+            st.session_state.draft_email = {"advisor": advisor, **details}
+            prepare_email_draft(build_draft())
+            st.session_state.email_mode = "edit"          # open the text editor with the draft
+            st.session_state["book_consultation_tabs"] = 1
+
+            current_chat["messages"].append({
+                "role": "assistant",
+                "content": f"Sure! I can help you book a consultation with {advisor}. "
+                           f"I've opened the draft consultation email for you — review and edit it before sending."
+            })
+            st.session_state.page = "book_consultation"
+            st.rerun()
 
         reply_text = bot_reply(last_user_msg) if last_user_msg else \
             "I received your file! Let me take a look."
