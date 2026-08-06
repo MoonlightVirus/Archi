@@ -291,5 +291,33 @@
   "STATUS_CHECK": [
     "check my status",
     "status"
-  ]
+  ],
+  "CURRICULUM_ACTION": [
+  "take",
+  "enroll",
+  "eligible",
+  "allowed",
+  "qualified"
+],
+"CRISIS_TERM": [
+    "hurt",
+    "self harm",
+    "kill",
+    "suicide",
+    "suicidal",
+    "end myself",
+    "die",
+    "don't want to live",
+    "do not want to live"
+],
+  "ACADEMIC_DISTRESS": [
+  "i am failing",
+  "i'm failing",
+  "i feel hopeless",
+  "i want to give up",
+  "i cannot continue",
+  "i can't continue",
+  "i am overwhelmed",
+  "i'm overwhelmed"
+]
 }

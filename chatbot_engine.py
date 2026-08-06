@@ -13,6 +13,10 @@ from nltk.chat.util import Chat, reflections
 from references.csv_parser import parse_csv_rules
 from pipeline.preprocessor import preprocess_text
 from pipeline.featureExtraction import FeatureExtractor
+#added by chael
+import re
+from pipeline.curriculum_engine import CurriculumEngine
+#end
 
 # ==========================================================
 # 1. NLP Pipeline Initialization
@@ -22,7 +26,16 @@ _pipeline_dir = os.path.join(_project_root, 'pipeline')
 _entities_path = os.path.join(_pipeline_dir, 'academic_entities.json')
 _binding_path = os.path.join(_pipeline_dir, 'binding_rules.json')
 _extractor = FeatureExtractor(json_path=_entities_path, binding_rules_path=_binding_path)
-
+#added by chael
+_curriculum = CurriculumEngine()
+# Stores temporary curriculum conversation information.
+# This is shared only for the current running session.
+_curriculum_context = {
+    "waiting_for": None,
+    "target_course": None,
+    "passed_courses": []
+}
+#end
 # ==========================================================
 # 2. INTENT RESPONSES (NLG Dictionary)
 # ==========================================================
@@ -60,14 +73,14 @@ def extract_intent_and_entities(features):
     for the template responses.
     """
     entities = features.get('entities', [])
-    
+
     # 1. Check bound parameters (action + target)
     for e in entities:
         if e.get('type') == 'bound_parameter':
             action = e.get('action')
             target = e.get('target_entity')
             target_cat = e.get('target_category')
-            
+
             if action in ['ACTION_SCHEDULE', 'ACTION_RESCHEDULE', 'ACTION_DEFER', 'ACTION_FAIL', 'CONSULTATION_TERM']:
                 return action, {'target': target}
             elif action == 'ACTION_CANCEL':
@@ -78,18 +91,28 @@ def extract_intent_and_entities(features):
                 return 'ACTION_CANCEL', {'target': target}
             elif action == 'ACTION_ADVISE':
                 return 'ACTION_ADVISE', {'action': 'underload'}
-                
+
     # 2. Check independent entities
     categories = [e.get('category') for e in entities if 'category' in e]
     entity_texts = {e.get('category'): e.get('entity') for e in entities if 'category' in e}
-    
+
+    # added by chael
+    if (
+            'CURRICULUM_ACTION' in categories
+            and 'COURSE_CODE' in categories
+    ):
+        return 'CHECK_ELIGIBILITY', {
+            'target': entity_texts['COURSE_CODE']
+        }
+    # end
+
     if 'ACTION_UPDATE' in categories and 'FLOWCHART_TERM' in categories:
         return 'FLOWCHART_UPDATE', {}
-        
+
     if 'FLOWCHART_TERM' in categories and 'COURSE_CODE' in categories:
         if "prerequisite" in entity_texts.get('FLOWCHART_TERM', '').lower():
             return 'PREREQUISITE_CHECK', {'target': entity_texts['COURSE_CODE']}
-            
+
     if 'GPA_CALCULATE' in categories: return 'GPA_CALCULATE', {}
     if 'GPA_UNDERSTAND' in categories: return 'GPA_UNDERSTAND', {}
     if 'GPA_LOW_CONCERN' in categories: return 'GPA_LOW_CONCERN', {}
@@ -97,8 +120,21 @@ def extract_intent_and_entities(features):
     if 'STATUS_CHECK' in categories:
         target = entity_texts.get('COURSE_CODE', 'enrollment')
         return 'STATUS_CHECK', {'target': target}
-        
+
     return None, {}
+
+#added by chael
+def extract_course_codes(features):
+    """
+    Extracts all course codes recognized in the user's message.
+    """
+
+    return list({
+        entity["entity"].upper()
+        for entity in features.get("entities", [])
+        if entity.get("category") == "COURSE_CODE"
+    })
+#end
 
 def get_response(user_input: str) -> str:
     """
@@ -111,7 +147,103 @@ def get_response(user_input: str) -> str:
     try:
         preprocessed = preprocess_text(user_input)
         features = _extractor.extract_features(preprocessed)
-        
+
+        #added by chael
+        # ==========================================================
+        # Handle an ongoing curriculum-planning conversation
+        # ==========================================================
+
+        #CRISIS RESPONSE
+        categories = {
+            entity.get("category")
+            for entity in features.get("entities", [])
+            if entity.get("category")
+        }
+
+        if "CRISIS_TERM" in categories:
+            # Cancel any pending curriculum flow.
+            _curriculum_context["waiting_for"] = None
+            _curriculum_context["target_course"] = None
+            _curriculum_context["passed_courses"] = []
+
+            return (
+                "I'm really sorry you're feeling this much pain. "
+                "Your safety matters more than your grades or curriculum right now.\n\n"
+                "Are you in immediate danger, or have you already taken any steps "
+                "to hurt yourself?\n\n"
+                "Please reach out to someone you trust who can stay with you, "
+                "such as a family member, friend, counselor, professor, or campus "
+                "support staff. If you may act on these thoughts soon, contact "
+                "local emergency services or go to the nearest emergency department."
+            )
+
+        if _curriculum_context["waiting_for"] == "passed_courses":
+            passed_courses = extract_course_codes(features)
+
+            if not passed_courses:
+                return (
+                    "I couldn't identify any course codes in your answer. "
+                    "Please list the courses you have passed using their codes, "
+                    "such as CBPROG1, CBPROG2, and CCDSTRU."
+                )
+
+            _curriculum_context["passed_courses"] = passed_courses
+            _curriculum_context["waiting_for"] = "current_term"
+
+            return (
+                "Thank you. What term are you currently enrolling for? "
+                "Please answer with Term 1, Term 2, or Term 3."
+            )
+
+        if _curriculum_context["waiting_for"] == "current_term":
+            term_match = re.search(
+                r"\b(?:term\s*)?([1-3])\b",
+                user_input.lower()
+            )
+
+            if not term_match:
+                return (
+                    "I couldn't determine the term. "
+                    "Please answer with Term 1, Term 2, or Term 3."
+                )
+
+            current_term = int(term_match.group(1))
+            course_code = _curriculum_context["target_course"]
+            passed_courses = _curriculum_context["passed_courses"]
+
+            # Every passed course has also been taken.
+            taken_courses = passed_courses.copy()
+
+            result = _curriculum.check_eligibility(
+                course_code,
+                passed_courses,
+                taken_courses,
+                current_term
+            )
+
+            response = result["message"]
+
+            if result.get("eligible"):
+                corequisites = result.get("corequisites", [])
+
+                if corequisites:
+                    response += (
+                            "\n\nPlease remember that you must also enroll in: "
+                            + ", ".join(corequisites)
+                    )
+
+            # Clear the conversation after completing the check.
+            _curriculum_context["waiting_for"] = None
+            _curriculum_context["target_course"] = None
+            _curriculum_context["passed_courses"] = []
+
+            return response
+        #end
+
+        print("\n========== DEBUG ==========")
+        print(features)
+        print("===========================\n")
+
         # 1. Check for Handbook Rules directly
         extracted_categories = set()
         for entity in features.get('entities', []):
@@ -119,7 +251,7 @@ def get_response(user_input: str) -> str:
                 extracted_categories.add(entity['category'])
             elif 'action' in entity:
                 extracted_categories.add(entity['action'])
-                
+
         for cat in extracted_categories:
             if cat in intent_to_rule_map:
                 rule_id = intent_to_rule_map[cat]
@@ -130,15 +262,30 @@ def get_response(user_input: str) -> str:
                         for sub_id, sub_text in rule_data['Sub-Rules'].items():
                             response_text += f"\n<b>{sub_id}</b>: {sub_text}\n"
                     return response_text
-        
+
         # 2. Check Intent Responses
         intent, entity_kwargs = extract_intent_and_entities(features)
+
+        #added by chael
+        if intent == "CHECK_ELIGIBILITY":
+            course_code = entity_kwargs["target"].upper()
+
+            _curriculum_context["target_course"] = course_code
+            _curriculum_context["waiting_for"] = "passed_courses"
+            _curriculum_context["passed_courses"] = []
+
+            return (
+                f"I can help you check your eligibility for {course_code}. "
+                "Please list the course codes you have already passed.\n\n"
+                "Example: CBPROG1, CBPROG2, CCDSTRU"
+            )
+        #end
         if intent and intent in INTENT_RESPONSES:
             template = random.choice(INTENT_RESPONSES[intent])
             response = template.format(**entity_kwargs)
             print(response)
             return response
-            
+
     except Exception as e:
         print(f"Pipeline error: {e}")
 
@@ -147,5 +294,5 @@ def get_response(user_input: str) -> str:
     if response:
         print(response)
         return response
-        
+
     return FALLBACK_RESPONSE

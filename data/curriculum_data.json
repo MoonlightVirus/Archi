@@ -1,0 +1,331 @@
+{
+  "CBPROG1": {
+    "name": "Logic Formulation and Introductory Programming",
+    "year": 1,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBEMC-1": {
+    "name": "CBL: Introduction to Computing and Digital Circuits",
+    "year": 1,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["LBYCBC1"]
+  },
+
+  "LBYCBC1": {
+    "name": "CBL: Introduction to Computing and Digital Circuits Laboratory",
+    "year": 1,
+    "term": 1,
+    "offered_term": 1,
+    "units": 2,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBEMC-1"]
+  },
+
+  "MTH101A": {
+    "name": "Foundation Course in Mathematics",
+    "year": 1,
+    "term": 1,
+    "offered_term": 1,
+    "units": 5,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBPROG2": {
+    "name": "Programming with Structured Data Types",
+    "year": 1,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": ["CBPROG1"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBEMC-2": {
+    "name": "CBL: Introduction to Computer Networks",
+    "year": 1,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": ["CBEMC-1"],
+    "soft_prerequisites": [],
+    "corequisites": ["LBYCBC2"]
+  },
+
+  "LBYCBC2": {
+    "name": "CBL: Introduction to Computer Networks Laboratory",
+    "year": 1,
+    "term": 2,
+    "offered_term": 2,
+    "units": 2,
+    "hard_prerequisites": ["CBEMC-1"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBEMC-2"]
+  },
+
+  "CCDSTRU": {
+    "name": "Discrete Structures",
+    "year": 1,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBINOV1": {
+    "name": "Creativity and Design",
+    "year": 1,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBARTAP"]
+  },
+
+  "CBARTAP": {
+    "name": "Art Appreciation",
+    "year": 1,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBINOV1"]
+  },
+
+  "CBEMC-3": {
+    "name": "Electronics Fundamentals and Digital Design",
+    "year": 1,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": ["CBEMC-2"],
+    "soft_prerequisites": [],
+    "corequisites": ["LBYCBC3"]
+  },
+
+  "LBYCBC3": {
+    "name": "Electronics Fundamentals and Digital Design Laboratory",
+    "year": 1,
+    "term": 3,
+    "offered_term": 3,
+    "units": 2,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBEMC-3"]
+  },
+
+  "CBDSALG": {
+    "name": "Data Structures and Algorithms",
+    "year": 1,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": ["CBPROG2", "CCDSTRU"],
+    "corequisites": []
+  },
+
+  "CSMATH1": {
+    "name": "Differential Calculus for Computer Science Students",
+    "year": 1,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": ["MTH101A"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBPHYSX": {
+    "name": "Physics for Electronics",
+    "year": 1,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBSTSOC"]
+  },
+
+  "CBSTSOC": {
+    "name": "Physics for Electronics",
+    "year": 1,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBPHYSX"]
+  },
+
+  "CBPROG3": {
+    "name": "Object Oriented Programming",
+    "year": 2,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": ["CBPROG2"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBINFOM": {
+    "name": "Information Management",
+    "year": 2,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": ["CBPROG2"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBARCHI": {
+    "name": "Computer Architecture and Organization",
+    "year": 2,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": ["CBPROG2"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBINTSY": {
+    "name": "Introduction to Intelligent Systems",
+    "year": 2,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": ["CCDSTRU", "CBDSALG"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBINTSY": {
+    "name": "Introduction to Intelligent Systems",
+    "year": 2,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": ["CCDSTRU", "CBDSALG"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBCLOUD": {
+    "name": "Cloud Computing",
+    "year": 2,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": ["CBINFOM"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBWORLD"]
+  },
+
+  "CBWORLD": {
+    "name": "Contemporary World",
+    "year": 2,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBCLOUD"]
+  },
+
+  "ST-MATH": {
+    "name": "Integral Calculus for Computer Science Students",
+    "year": 2,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": ["CBINFOM"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBWORLD"]
+  },
+
+  "CBEMC-4": {
+    "name": "Multi-agents",
+    "year": 2,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": ["CBINFOM"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBWORLD"]
+  },
+
+  "CBINOV2": {
+    "name": "Great Designers and Ideas",
+    "year": 2,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": ["CBINFOM"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBEMC-4"]
+  },
+
+  "CBOPESY": {
+    "name": "Introduction to Operating Systems",
+    "year": 2,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": ["CBARCHI"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBALGCM": {
+    "name": "Introduction to Operating Systems",
+    "year": 2,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": ["CBDSALG"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBEMC-5": {
+    "name": "Embodied Agents",
+    "year": 2,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBPCOMM"]
+  },
+
+  "CBPCOMM": {
+    "name": "Embodied Agents",
+    "year": 2,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBEMC-5"]
+  }
+}
