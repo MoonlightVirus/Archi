@@ -1,7 +1,7 @@
 import calendar
 from datetime import date
 import streamlit as st
-from state import ADVISORS
+from state import get_advisors
 from components.consultation_modal import render_consultation_dialog
 
 TIME_SLOTS = ["9:30 AM", "10:30 AM", "11:30 AM", "1:00 PM", "2:00 PM", "3:00 PM"]
@@ -11,7 +11,7 @@ def _init_calendar_state():
     st.session_state.setdefault("cal_year", today.year)
     st.session_state.setdefault("cal_month", today.month)
     st.session_state.setdefault("selected_date", today)
-    st.session_state.setdefault("selected_advisor", ADVISORS[0]["name"])
+    st.session_state.setdefault("selected_advisor", get_advisors()[0]["name"])
     st.session_state.setdefault("selected_time", TIME_SLOTS[0])
 
 def _render_calendar():
@@ -77,7 +77,7 @@ def _render_calendar():
 
 def _render_advisors():
     st.markdown("<h3 style='margin-top:0;'>Available Advisors</h3>", unsafe_allow_html=True)
-    for advisor in ADVISORS:
+    for advisor in get_advisors():
         selected = advisor["name"] == st.session_state.selected_advisor
         with st.container(border=True):
             c1, c2 = st.columns([2.2, 1.4], vertical_alignment="center")
