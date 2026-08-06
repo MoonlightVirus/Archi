@@ -6,11 +6,8 @@
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "might",
       "demanding",
-      "take",
-      "prior",
-      "easy"
+      "AI"
     ],
     "sample_tips": [
       "Might be demanding if you did not take any prior AI class before this one. If you did, this will be very easy. "
@@ -23,14 +20,11 @@
     "sentiment_label": "positive",
     "pct_positive": 50.0,
     "themes": [
-      "experience",
-      "based",
-      "super",
-      "heavy",
-      "math"
+      "automata",
+      "math-heavy"
     ],
     "sample_tips": [
-      "A bit chill, but it took us so long to go to the next topics. I learned a lot tho. Use the Automaton Simulator, it helped me understand how automata works.",
+      "Use the Automaton Simulator, it helped me understand how automata works.",
       "Based on our experience, it was super heavy on math. Experience is highly dependent on the prof."
     ]
   },
@@ -40,12 +34,7 @@
     "mean_compound": 0.0,
     "sentiment_label": "neutral",
     "pct_positive": 0.0,
-    "themes": [
-      "hands",
-      "exams",
-      "hardest",
-      "part"
-    ],
+    "themes": [],
     "sample_tips": [
       "Hands on exams were the hardest part of this course. "
     ]
@@ -57,15 +46,13 @@
     "sentiment_label": "positive",
     "pct_positive": 66.7,
     "themes": [
-      "assembly",
-      "easy",
-      "taking",
-      "ccbemc",
-      "dont"
+      "assembly language",
+      "memory",
+      "cache tracing"
     ],
     "sample_tips": [
       "It was manageable, with some memorization and memory/cache tracing. Had to learn Assembly and do projects with it, but you can use AI.",
-      "Should be easy after taking CCBEMC 3. Dont forget everything from the past terms cause it is very useful in the next terms/courses.",
+      "Should be easy after taking CBEMC 3. Dont forget everything from the past terms cause it is very useful in the next terms/courses.",
       "Review certain topics from CBEMC-1 and Assembly language"
     ]
   },
@@ -76,11 +63,8 @@
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "depends",
       "easy",
-      "enjoyable",
-      "subjects",
-      "used"
+      "enjoyable"
     ],
     "sample_tips": [
       "It was also enjoyable and depends on your other subjects as we used the CBL approach for projects",
@@ -96,9 +80,7 @@
     "themes": [
       "asean",
       "easy",
-      "since",
-      "projects",
-      "needed"
+      "projects"
     ],
     "sample_tips": [
       "Should be easy but since projects needed to incorporate ASEAN, you might need to find a project that connects ASEAN to tech. "
@@ -113,12 +95,11 @@
     "themes": [
       "project",
       "labwork",
-      "finish",
-      "everything",
-      "deadline"
+      "ceritification",
+      "AWS"
     ],
     "sample_tips": [
-      "It was a breeze, we just do labs with amazon, the exams are easy and the project was in collaboration with CBEMC-4 so it was two subject project in one",
+      "It was a breeze, we just do labs with Amazon, the exams are easy and the project was in collaboration with CBEMC-4 so it was two subject project in one",
       "Just do labwork in class. Make sure you finish everything before the deadline. Take this as an opportunity to have a certification",
       "You can get AWS certificate once you complete the course"
     ]
@@ -129,13 +110,7 @@
     "mean_compound": 0.382,
     "sentiment_label": "positive",
     "pct_positive": 100.0,
-    "themes": [
-      "concepts",
-      "need",
-      "lesson",
-      "cram",
-      "midterms"
-    ],
+    "themes": [],
     "sample_tips": [
       "There are a lot of concepts that you need to study. Study each lesson again after class, it helps not to cram during midterms and finals. "
     ]
@@ -147,16 +122,16 @@
     "sentiment_label": "negative",
     "pct_positive": 0.0,
     "themes": [
+      "algorithms",
+      "logic",
+      "DSA",
       "practice",
-      "self",
-      "concepts",
-      "hard",
-      "listen"
+      "self-study"
     ],
     "sample_tips": [
-      "A lot of practice and self studying. Concepts are hard so listen to class and ask questions. ",
+      "A lot of practice and self studying. Concepts are hard so listen to class and ask questions.",
       "Practice and review DSA/DSALG problems you can find from the internet or CCS seniors.",
-      "the instructor and a lot of logic, algorithms and memorization"
+      "A lot of logic, algorithms and memorization"
     ]
   },
   "CBEMC-1": {
@@ -166,16 +141,12 @@
     "sentiment_label": "positive",
     "pct_positive": 75.0,
     "themes": [
-      "arduino",
-      "instructor",
-      "circuits",
-      "although",
-      "take"
+      "Arduino",
+      "circuits"
     ],
     "sample_tips": [
-      "Although it is a lot to take in as a freshman, having a nice and lenient prof made it manageable. Try to disperse groupmates who had arduino projects prior to college.",
-      "If you have the instructor, you're in good hands <3. If you are unfamiliar with Arduino and circuits, you can practice with Wokwi",
-      "the instructor is the best at teaching circuits"
+      "Although it is a lot to take in as a freshman, having a nice and lenient prof made it manageable. Try to disperse groupmates who had Arduino projects prior to college.",
+      "If you are unfamiliar with Arduino and circuits, you can practice with Wokwi"
     ]
   },
   "CBEMC-2": {
@@ -185,11 +156,10 @@
     "sentiment_label": "positive",
     "pct_positive": 66.7,
     "themes": [
-      "listen",
-      "lessons",
+      "CISCO packet tracer",
+      "Java",
       "lab",
-      "work",
-      "well"
+      "Python"
     ],
     "sample_tips": [
       "Lots of conceptual knowledge that you need to be familiar with. Professor might ask you to code in Java or Python for certain activities/assignments.",
@@ -204,15 +174,14 @@
     "sentiment_label": "neutral",
     "pct_positive": 33.3,
     "themes": [
-      "self",
-      "demanding",
-      "try",
-      "remember",
-      "lesson"
+      "Polling",
+      "Interrupts",
+      "Arduino",
+      "circuits"
     ],
     "sample_tips": [
-      "Another the instructor special, learned a lot of stuff. Working with capable teammates really helped a lot especially for projects, as it was in collab with CBLCLOUD to make multi-agents.",
-      "This was very self learn for us so it was demanding. Try to remember the lesson about polling and interrupts because you will encounter that again in opesy.",
+      "Working with capable teammates really helped a lot especially for projects, as it was in collab with CBCLOUD to make multi-agents.",
+      "Try to remember the lesson about polling and interrupts because you will encounter that again in CBOPESY.",
       "Brush up on Arduino and circuits knowledge"
     ]
   },
@@ -223,33 +192,29 @@
     "sentiment_label": "negative",
     "pct_positive": 50.0,
     "themes": [
-      "concepts",
-      "search",
-      "important",
+      "virtual agents",
       "research",
-      "options"
+      "NLP"
     ],
     "sample_tips": [
       "There were a lot of concepts we did not know and had to search ourselves. It is very important to research all options on how to do your own chatbot/agent because time and effort in this subject will be based on that. ",
-      "No exam, but very demanding projects and making virtual agents like chatbot. It's annoying to do."
+      "No exam, but very demanding projects and making virtual agents like chatbot."
     ]
   },
-  "CBEMC3": {
+  "CBEMC-3": {
     "course_name": "Electronics Fundamentals and Digital Design",
     "n_comments": 2,
     "mean_compound": 0.782,
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "great",
-      "lab",
-      "lessons",
-      "relevant",
-      "later"
+      "minecraft",
+      "redstone",
+      "lab"
     ],
     "sample_tips": [
       "This is a great course. All lessons here will be relevant later on. The hands on lab are great and are actually fulfilling to make. Do lab work well and study concept on your free time, or just listen to class. ",
-      "the instructor is still the best at teaching logic formulation and circuitry, also we did Minecraft Redstone"
+      "Major projects will mostly be done in Minecraft Redstone, so it is important to understand the concepts of electronics and digital design. "
     ]
   },
   "CBETHIC": {
@@ -258,12 +223,8 @@
     "mean_compound": 0.0,
     "sentiment_label": "neutral",
     "pct_positive": 0.0,
-    "themes": [
-      "listen"
-    ],
-    "sample_tips": [
-      "Just listen in class. "
-    ]
+    "themes": [],
+    "sample_tips": []
   },
   "CBINFOM": {
     "course_name": "Information Management",
@@ -273,14 +234,12 @@
     "pct_positive": 50.0,
     "themes": [
       "projects",
-      "infom",
-      "paired",
-      "may",
+      "CBPROG3",
       "difficult"
     ],
     "sample_tips": [
-      "Oh my god, databases, especially our final project is so scuffed and rushed. Do your projects early.",
-      "Infom paired with CBPROG3 may be difficult, so manage your time well in doing projects."
+      "Do your projects early.",
+      "CBINFOM paired with CBPROG3 may be difficult, so manage your time well in doing projects."
     ]
   },
   "CBINOV1": {
@@ -290,15 +249,14 @@
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "depends",
-      "supposed",
       "easy",
-      "heavily",
-      "workload"
+      "enjoyable",
+      "workload",
+      "project"
     ],
     "sample_tips": [
-      "course was supposed to be easy, it heavily depends on prof if workload will be bearable. ",
-      "It was enjoyable, but also depends on your project in other subjects"
+      "The course is supposed to be easy, it heavily depends on prof if workload will be bearable.",
+      "It was enjoyable, but also depends on your project in other subjects, so pick a project you will enjoy and not just for the sake of finishing it."
     ]
   },
   "CBINOV2": {
@@ -308,14 +266,13 @@
     "sentiment_label": "negative",
     "pct_positive": 33.3,
     "themes": [
-      "questions",
-      "workload",
-      "depends",
-      "enjoy",
-      "decide"
+      "interview",
+      "requirements",
+      "rubrics",
+      "workload"
     ],
     "sample_tips": [
-      "Decide on which designer you want to interview as early as possible. Clarify requirements with the instructor (if he's your prof) if you have any questions. Pay attention to the rubrics for the case study.",
+      "Decide on which designer you want to interview as early as possible. Clarify requirements with the instructor if you have any questions. Pay attention to the rubrics for the case study.",
       "Workload depends on the prof. Just enjoy this class. "
     ]
   },
@@ -326,11 +283,9 @@
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "average",
       "workload",
       "concepts",
-      "important",
-      "applied"
+      "real world"
     ],
     "sample_tips": [
       "Average workload. Concepts in class are important and can really be applied in the real world."
@@ -359,10 +314,9 @@
     "pct_positive": 66.7,
     "themes": [
       "easy",
-      "long",
-      "pay",
-      "attention",
-      "every"
+      "prolog",
+      "trees",
+      "graphs"
     ],
     "sample_tips": [
       "Should be easy, as long as you pay attention to every class and you study the powerpoint religiously. Exams here are easy once you know the algorithms by heart.",
@@ -377,15 +331,16 @@
     "sentiment_label": "negative",
     "pct_positive": 25.0,
     "themes": [
-      "choose",
-      "groupmates",
-      "wisely",
+      "difficult",
+      "jargons",
+      "AI",
       "heavy",
-      "term"
+      "workload"
     ],
     "sample_tips": [
-      "I didn't understand anything much, the canvas is a mess, there's a lot of jargons and annoying words to memorize. A bit easier because we can use AI for the MCOs and Assignments, but it's still very rigorous.",
-      "Choose your groupmates wisely because this will be a heavy term. Profs who teach OPESY heavily emphasizes that this is extremely demanding and needs a lot of work. ",
+      "Expect a lot of jargons and concepts to understand and memorize.",
+      "A bit easier because we can use AI for the MCOs and Assignments, but it's still very rigorous.",
+      "Choose your groupmates wisely because this will be a heavy term. Profs who teach CBOPESY heavily emphasizes that this is extremely demanding and needs a lot of work. ",
       "Difficult course with way too many requirements."
     ]
   },
@@ -396,14 +351,12 @@
     "sentiment_label": "negative",
     "pct_positive": 0.0,
     "themes": [
-      "project",
-      "kind",
-      "heavy",
-      "subject",
-      "since"
+      "marketing",
+      "posters",
+      "film"
     ],
     "sample_tips": [
-      "It was kind of heavy for a GE subject since you will need to film, make posters, market your project, and all that. "
+      "It was kind of heavy for a GE subject since you will need to film, make posters, and market your project."
     ]
   },
   "CBPHYSX": {
@@ -413,15 +366,12 @@
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "since",
-      "passing",
-      "grade",
-      "remains",
-      "doable"
+      "theoretical",
+      "lab work"
     ],
     "sample_tips": [
       "If passing grade remains 50%, this should be doable. Listen to class and study outside class as well since this is both theoretical and lab work.",
-      "It was fun and also interesting since our professor is the instructor"
+      "It was fun and also interesting because I was able to get a good professor who taught the subject well."
     ]
   },
   "CBPROG2": {
@@ -431,15 +381,15 @@
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "prog",
       "fundamentals",
       "everything",
-      "else",
-      "need"
+      "pointers",
+      "file handling",
+      "practice"
     ],
     "sample_tips": [
       "Professor can impact how well you can understand the topics in this course. Keep practicing C fundamentals and work early with groupmates for the Machine Project",
-      "Don't AI Prog 1 and Prog 2. You will need a lot of knowledge in pointers and file handling, Prog 2 is a good practice. Do your MP for at least 1 month.",
+      "Don't use AI in the Prog series including this course. You will need a lot of knowledge in pointers and file handling, Prog 2 is a good practice. Do your MP for at least 1 month.",
       "Fundamentals will help you understand everything else"
     ]
   },
@@ -450,15 +400,12 @@
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "easier",
-      "prog",
-      "hands",
-      "exams",
-      "hard"
+      "hands-on",
+      "OOP"
     ],
     "sample_tips": [
-      "This should be easier than Prog 1 and 2. Hands on exams would be easier, it is just hard because MP is tied with INFOM so there are more rules in making the project and defending it. PProject is much more complex because of OOP.",
-      "the instructor's workload is insane, but she's also good at teaching programming as she goes in-depth. Problem is that she gave us our MCO specifications super late and that really messed up our schedule."
+      "This should be easier than Prog 1 and 2. Hands on exams would be easier, it is just hard because MP is tied with INFOM so there are more rules in making the project and defending it. Project is much more complex because of OOP.",
+      "Some professors may provide heavy workload, so keep an eye out for that."
     ]
   },
   "CBRESME": {
@@ -476,13 +423,7 @@
     "mean_compound": 0.593,
     "sentiment_label": "positive",
     "pct_positive": 100.0,
-    "themes": [
-      "quizzes",
-      "easy",
-      "manageable",
-      "read",
-      "powerpoints"
-    ],
+    "themes": [],
     "sample_tips": [
       "There are quizzes but they are easy and manageable. Just read the powerpoints before class. "
     ]
@@ -495,13 +436,11 @@
     "pct_positive": 50.0,
     "themes": [
       "easy",
-      "depends",
-      "much",
-      "research",
-      "stuff"
+      "presentations",
+      "research"
     ],
     "sample_tips": [
-      "I did not learn much, but we had to do a lot of research stuff for the instructor",
+      "Expect research projects and presentations for this course.",
       "Should be easy, depends on prof. "
     ]
   },
@@ -513,10 +452,7 @@
     "pct_positive": 100.0,
     "themes": [
       "rubrics",
-      "easy",
-      "sent",
-      "start",
-      "term"
+      "easy"
     ],
     "sample_tips": [
       "Should be easy but make sure your prof sent you the rubrics at the start of the term and not at the end. Adhere to those rubrics at all times. "
@@ -529,14 +465,11 @@
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "many",
-      "things",
-      "track",
-      "document",
-      "set"
+      "documentation",
+      "Github actions"
     ],
     "sample_tips": [
-      "There are so many things to track and document in this course. Make sure you set up github actions well and your documentation is always updated. "
+      "There are so many things to track and document in this course. Make sure you set up Github actions well and your documentation is always updated. "
     ]
   },
   "CBWORLD": {
@@ -546,15 +479,12 @@
     "sentiment_label": "positive",
     "pct_positive": 100.0,
     "themes": [
-      "easy",
-      "exams",
-      "instructor",
-      "word",
-      "depends"
+      "politics",
+      "government"
     ],
     "sample_tips": [
-      "Complete 180 degrees from the CBPROG1 the instructor, this really allowed me to learn a lot about politics and government. Just be sure to do your write-ups on time and prepare your presentations well.",
-      "As long as you listen to the lectures, all the exams are easy. A lot of what the instructor says (if he's your prof) is quite literally word for word in the exams.",
+      "This really allowed me to learn a lot about politics and government. Just be sure to do your write-ups on time and prepare your presentations well.",
+      "As long as you listen to the lectures, all the exams are easy. Some professors have the ask the same word-for-word questions from their lectures, so it really depends on the instructor.",
       "Should be easy, it really depends on the prof. "
     ]
   },
@@ -565,11 +495,10 @@
     "sentiment_label": "positive",
     "pct_positive": 50.0,
     "themes": [
-      "taking",
-      "might",
-      "gemath",
-      "first",
-      "ccdstru"
+      "GEMATH",
+      "participate",
+      "formulas",
+      "logic"
     ],
     "sample_tips": [
       "Taking GEMATH first before taking CCDSTRU might have a factor on how easy this will be for students. Try to always participate in class and ask questions already before class ends because some activities might be too confusing to figure out on your own. ",
@@ -583,16 +512,16 @@
     "sentiment_label": "neutral",
     "pct_positive": 16.7,
     "themes": [
-      "modules",
-      "yet",
-      "familiar",
-      "instructor",
-      "master"
+      "Canvas",
+      "practice",
+      "C",
+      "groupmates",
+      "quiz"
     ],
     "sample_tips": [
-      "Read the modules on canvas, all students of ccprog1 have the same modules so it will more likely be the basis of departmental exams. Should not be CBL, this is a foundation course, we are not supposed to figure it out on our own yet.",
+      "Read the modules on Canvas, all students of CCPROG1 have the same modules so it will more likely be the basis of departmental exams. This is a foundation course, we are not supposed to figure it out on our own yet.",
       "Do practice exercises, get familiar with C if you are not familiar yet, and work early with your groupmates for the Machine Project",
-      "If your prof is the instructor, be prepared for a quiz every meeting"
+      "Some professors prepare a quiz every meeting, so make sure to take notes during lectures."
     ]
   },
   "CSMATH1": {
@@ -602,14 +531,13 @@
     "sentiment_label": "negative",
     "pct_positive": 0.0,
     "themes": [
-      "needs",
-      "self",
+      "calculus",
+      "self-study",
       "youtube",
-      "videos",
-      "pts"
+      "practice"
     ],
     "sample_tips": [
-      "Needs a lot of self study, youtube videos and PTS sessions are needed if you have no background in Calculus. ",
+      "Needs a lot of self studying. Youtube videos and DLSU Peer Tutor Society sessions are recommended if you have no background in Calculus. ",
       "With notes and practice problems, math is manageable"
     ]
   },
@@ -641,12 +569,12 @@
       "practice",
       "keep",
       "answer",
-      "aleks"
+      "ALEKS"
     ],
     "sample_tips": [
-      "Practice a lot. Those from science high schools could pass this course easily, while those who are learning these concepts for the first time should really render time to study.",
+      "Practice a lot. Those who are learning these concepts for the first time should really render time to study.",
       "Keep your notes and keep solving practice problems",
-      "Answer Aleks ahead of time"
+      "Answer ALEKS ahead of time"
     ]
   },
   "ST-MATH": {
@@ -665,7 +593,7 @@
     "sample_tips": [
       "Would be the last calculus subject so take it seriously. Don't forget everything from CSMATH because you will need all derivative knowledge to pass this course. Practice a lot.",
       "There's not much workload, but damn it was difficult.",
-      "Practice often if you do not want to fail like me :("
+      "Practice often."
     ]
   },
   "STT101A": {
@@ -675,15 +603,13 @@
     "sentiment_label": "neutral",
     "pct_positive": 0.0,
     "themes": [
-      "taken",
-      "yet",
-      "lots",
       "exercises",
-      "final"
+      "research",
+      "quizzes"
     ],
     "sample_tips": [
-      "Lots of exercises and the final project is a statistical analysis research.",
-      "Have not taken this yet."
+      "Lots of exercises and the final project is a Statistical Analysis Research.",
+      "Familiarize yourself with PHStat or any statistical software. Quizzes are easy if you understand the concepts."
     ]
   }
 }

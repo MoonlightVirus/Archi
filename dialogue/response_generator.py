@@ -23,7 +23,7 @@ def generate_response(intent: str | None, course_code: str | None, course_index:
     if course_code is None:
         if intent is not None:
             return tmpl.CLARIFY_WHICH_COURSE
-        return None  # not a course query at all -- let nltk Chat handle it
+        return None  
 
     info = course_index.get(course_code)
     if info is None:
@@ -40,7 +40,7 @@ def generate_response(intent: str | None, course_code: str | None, course_index:
             name=name, code=course_code, diff=info["mean_difficulty"],
             diff_label=info["difficulty_label"], n=n, n_plural=_plural(n),
             low_n_note=_low_n_note(n),
-        )
+        ) + tmpl.SURVEY_DISCLAIMER
 
     if intent == "workload":
         if info.get("mean_workload") is None:
@@ -50,14 +50,14 @@ def generate_response(intent: str | None, course_code: str | None, course_index:
             name=name, code=course_code, work=info["mean_workload"],
             work_label=info["workload_label"], n=n, n_plural=_plural(n),
             low_n_note=_low_n_note(n),
-        )
+        ) + tmpl.SURVEY_DISCLAIMER
 
     if intent == "tips":
         sample_tips = info.get("sample_tips") or []
         if not sample_tips:
             return tmpl.TIPS_NO_DATA.format(name=name, code=course_code)
         bullet_list = "\n".join(f"- {t}" for t in sample_tips)
-        return tmpl.TIPS_WITH_DATA.format(name=name, sample_tips=bullet_list)
+        return tmpl.TIPS_WITH_DATA.format(name=name, sample_tips=bullet_list) + tmpl.SURVEY_DISCLAIMER
 
     if intent == "sentiment":
         if info.get("sentiment_label") in (None, "no_data"):
@@ -67,7 +67,7 @@ def generate_response(intent: str | None, course_code: str | None, course_index:
         return tmpl.SENTIMENT_WITH_DATA.format(
             name=name, sent_label=info["sentiment_label"], pct_pos=info["pct_positive"],
             n_comments=n_comments, n_comments_plural=_plural(n_comments), themes=themes,
-        )
+        ) + tmpl.SURVEY_DISCLAIMER
 
     # overview (default)
     if info.get("mean_difficulty") is None and info.get("mean_workload") is None:
@@ -86,4 +86,4 @@ def generate_response(intent: str | None, course_code: str | None, course_index:
         work=info.get("mean_workload", "N/A"), work_label=info.get("workload_label", "Unknown"),
         sent_label=info.get("sentiment_label", "no_data"),
         low_n_note=low_n, top_tip_line=top_tip_line,
-    )
+    ) + tmpl.SURVEY_DISCLAIMER

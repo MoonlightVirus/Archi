@@ -43,3 +43,9 @@ COURSE_NOT_FOUND = (
 
 LOW_N_NOTE_TEMPLATE = " (Note: this is based on a small number of responses, so take it with a grain of salt.)"
 LOW_N_THRESHOLD = 3
+
+
+SURVEY_DISCLAIMER = (
+    "\n\n_This is based on student survey responses, not official course "
+    "data, and reflects a small sample -- individual experience may vary._"
+)

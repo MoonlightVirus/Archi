@@ -157,10 +157,11 @@ def get_response(user_input: str) -> str:
     course_response = _try_course_intent_query(user_input)
     if course_response is not None:
         return course_response
-
+    """  
     response = _chatbot.respond(user_input)
     if response is not None:
         return response
+    """
 
     overview_response = _try_course_overview_fallback(user_input)
     if overview_response is not None:
