@@ -1,0 +1,57 @@
+{
+    "PREREQUISITE_CHECK": [
+        "ARCHI is fetching the prerequisites for {target} from the database now...",
+        "Let ARCHI scan your flowchart for {target}... Got it! I've pulled up the prerequisite list for you."
+    ],
+    "FLOWCHART_UPDATE": [
+        "ARCHI is updating your flowchart based on your recent grades now. All passed subjects have been crossed out!",
+        "Sure thing! ARCHI is syncing your grades with your flowchart to make sure it's fully up to date."
+    ],
+    "ACTION_DEFER": [
+        "ARCHI is generating a revised flowchart simulating a deferral for {target}... I will adjust your future terms accordingly.",
+        "Leave it to ARCHI! I am creating a new flowchart track that defers {target}. Let me process the prerequisite shifts..."
+    ],
+    "ACTION_FAIL": [
+        "ARCHI is generating a new flowchart track accounting for a failed grade in {target}... You will need to retake it next term.",
+        "Don't worry, ARCHI is revising your flowchart due to failing {target}. Let me recalculate your prerequisites and graduation timeline."
+    ],
+    "ACTION_ADVISE": [ 
+        "ARCHI is analyzing your current standing... Based on your request to {action}, I suggest dropping a minor subject first to balance your load. Generating an optimal plan...",
+        "Let ARCHI calculate the best course of action for your {action} request. Suggesting a revised term schedule now..."
+    ],
+    "CONSULTATION_TERM": [
+        "Let ARCHI look up {target}'s schedule in the faculty database... Found it! I've pinned their available booking slots to your dashboard.",
+        "Checking the department bulletin for {target}'s consultation hours... Okay, I've got their free time pulled up so we can book."
+    ],
+    "ACTION_SCHEDULE": [
+        "As your dedicated consultation bot, ARCHI is checking {target}'s calendar now... I have successfully booked your consultation and sent you both an invite!",
+        "Leave the booking to ARCHI! Done, I've scheduled your academic advising session with {target} and blocked off the time in your calendar."
+    ],
+    "ACTION_RESCHEDULE": [
+        "ARCHI can help with that! Let me look at {target}'s alternative slots... Okay, I have proposed a new time for your consultation.",
+        "Moving your booking... Done! ARCHI has rescheduled your consultation with {target}. I'll notify them of the change."
+    ],
+    "ACTION_CANCEL": [
+        "ARCHI has successfully canceled your consultation with {target}. Their calendar slot has been freed up.",
+        "Cancellation confirmed! I've removed the consultation with {target} from your schedule. Let me know when you want to book again!"
+    ],
+    "GPA_CALCULATE": [
+        "To calculate your GPA, we need your grades and number of units for each course. Can you provide those?",
+        "At DLSU, your GPA is calculated by multiplying each grade by its course credits, adding them up, and dividing that total by your overall credits, rounded to two decimal places."
+    ],
+    "GPA_UNDERSTAND": [
+        "Our GPA policy is outlined in the student handbook. Would you like me to direct you to that section?",
+        "GPA is a weighted average of the grades you earn in your courses."
+    ],
+    "GPA_LOW_CONCERN": [
+        "I understand. We have academic advisors who can help you improve your GPA. Would you like to schedule a meeting?",
+        "Don't worry, there are resources available to help. Let's explore some options together."
+    ],
+    "GPA_IMPROVE": [
+        "I understand. We have academic advisors who can help you improve your GPA. Would you like to schedule a meeting?",
+        "Don't worry, there are resources available to help. Let's explore some options together."
+    ],
+    "STATUS_CHECK": [
+        "Let me look into your {target} status right away. Please hold on."
+    ]
+}
