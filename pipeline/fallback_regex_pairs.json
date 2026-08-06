@@ -1,0 +1,75 @@
+[
+    [
+        ".*?(\\d+)\\s*(?:credits|units).*?([0-3]\\.[0-9]|4\\.0)\\s*(?:gpa|cgpa).*",
+        [
+            "Got it. You have %1 units with a %2 CGPA. I've logged this into your profile."
+        ]
+    ],
+    [
+        ".*(?:target|aim for|want a|want to reach)\\s*([0-3]\\.[0-9]|4\\.0).*",
+        [
+            "Target CGPA set to %1. How many units do you have left to take next semester?"
+        ]
+    ],
+    [
+        ".*(\\d+)\\s*(?:units|credits)\\s*(?:left|remaining|next semester).*",
+        [
+            "Logged %1 remaining units. Type \"optimize\" and I've got the math covered for you!"
+        ]
+    ],
+    [
+        ".*(?:optimize|calculate strategy|how do i get there).*",
+        [
+            "Processing your academic profile...(soon)"
+        ]
+    ],
+    [
+        ".*(?:TOR|transcript of records|grades).*",
+        [
+            "Got it. I will take note of your transcript of records for future reference."
+        ]
+    ],
+    [
+        "(.*)(stressed|panicking|panic|overwhelmed|anxious|failing|delayed)(.*)",
+        [
+            "Take a deep breath. Academic journeys can be tough, but you are not alone. Let's look over your flowchart together and find a strategic way forward.",
+            "It is completely okay to feel overwhelmed. Archi is here to help you structure your steps. Let's start by looking at your current term tracking to ease the load."
+        ]
+    ],
+    [
+        "(.*)(confused|lost|dont know what to do|stuck|clueless)(.*)",
+        [
+            "Don't worry, navigating your academic path can be complicated! Let's clear up the confusion. What specific prerequisite or term requirement are you looking at?",
+            "Let's get you back on track. Tell me what course or consultation process is confusing you, and we will break it down together."
+        ]
+    ],
+    [
+        "(.*)(thank you|thanks|salamat|ty)(.*)",
+        [
+            "You're very welcome! Always glad to help an Archer succeed. Let me know if you need anything else.",
+            "Happy to help! Keep pushing forward toward your goals. Animo!"
+        ]
+    ],
+    [
+        "^(hi|hello|hey|greetings)(.*)$|(.*)\\b(hello|hi|hey|greetings|hola|kamusta|whats up|sup|archi)\\b(.*)",
+        [
+            "Animo! I am Archi, your Intelligent Academic Guide. How can I help you optimize your term today?",
+            "Hello! Archi here. Ready to map out your academic path. What can I do for you?"
+        ]
+    ],
+    [
+        "^(goodbye|bye|see ya|exit)(.*)$",
+        [
+            "Goodbye! Have a productive trimester. Remember to track your flowchart regularly!",
+            "See you later! Don't hesitate to consult me the next time you need to optimize your grades."
+        ]
+    ],
+    [
+        "^(okay|mhm|i see|sure|yes)(.*)$",
+        [
+            "I'm glad you Understand! Do you have other questions or inquiries?",
+            "Let's continue! Do you have other questions or inquiries?",
+            "Do you have other questions or inquiries?"
+        ]
+    ]
+]

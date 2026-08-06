@@ -427,9 +427,11 @@ def render_chat():
                 </div>
                 """)
         else:
+            # Do not escape assistant content so that HTML tables and tags render properly
+            assistant_content = str(content)
             chat_html_parts.append(f"""
             <div class="msg-assistant-row">
-                <div class="msg-assistant-bubble">{safe_content}</div>
+                <div class="msg-assistant-bubble">{assistant_content}</div>
             </div>
             """)
 

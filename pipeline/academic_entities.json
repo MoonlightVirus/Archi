@@ -1,0 +1,295 @@
+{
+  "COURSE_CODE": [
+    "ccprog1",
+    "ccprog2",
+    "cbprog1",
+    "cbemc-1",
+    "lbycbc1",
+    "mth101a",
+    "cbprog2",
+    "cbemc-2",
+    "lbycbc2",
+    "ccdstru",
+    "cbinov1",
+    "cbartap",
+    "cbemc-3",
+    "lbycbc3",
+    "cbdsalg",
+    "csmath1",
+    "cbphysx",
+    "cbstsoc",
+    "cbprog3",
+    "cbinfom",
+    "cbarchi",
+    "cbintsy",
+    "cbcloud",
+    "cbworld",
+    "st-math",
+    "cbemc-4",
+    "cbinov2",
+    "cbopesy",
+    "cbalgcm",
+    "stt101a",
+    "cbemc-5",
+    "cbpcomm",
+    "cbapdev",
+    "cbethic",
+    "cbinov3",
+    "csmath2",
+    "cbsweg1",
+    "cbasean",
+    "cbinov4",
+    "cbresme",
+    "cbsecdv",
+    "cbsweg2",
+    "cbdatsi",
+    "cbadvai",
+    "ths-cb1",
+    "ths-cb2",
+    "cbdiscm",
+    "ths-cb3",
+    "prccc01",
+    "prccsci"
+  ],
+  "ACTION_CANCEL": [
+    "drop",
+    "cancel"
+  ],
+  "ACADEMIC_UNIT": [
+    "regular class",
+    "course credit",
+    "regular course"
+  ],
+  "ACADEMIC_LOAD": [
+    "unit",
+    "load",
+    "full-time",
+    "overload"
+  ],
+  "GRADING_TERM": [
+    "grading",
+    "grade",
+    "pass",
+    "fail",
+    "failure",
+    "deferred"
+  ],
+  "GPA_TERM": [
+    "gpa",
+    "cgpa"
+  ],
+  "STUDENT_TYPE": [
+    "transferee",
+    "second degree"
+  ],
+  "COURSE_COMPONENT": [
+    "lecture",
+    "laboratory",
+    "co-requisite"
+  ],
+  "FINANCIAL_TERM": [
+    "refund"
+  ],
+  "ACTION_PETITION": [
+    "change grade",
+    "petition"
+  ],
+  "ENROLLMENT_TERM": [
+    "enrollment",
+    "enroll",
+    "section"
+  ],
+  "AUDIT_TERM": [
+    "audit",
+    "audit class",
+    "audit course"
+  ],
+  "RETENTION_TERM": [
+    "eligible",
+    "ineligible",
+    "retention",
+    "shift"
+  ],
+  "MAXIMUM_TENURE": [
+    "exceed maximum term",
+    "maximum term",
+    "exceed term"
+  ],
+  "NSTP_TERM": [
+    "nstp"
+  ],
+  "SPECIAL_COURSE": [
+    "special class",
+    "special course"
+  ],
+  "HONORS_LIST": [
+    "dean list"
+  ],
+  "HONORS_TERM": [
+    "jose rizal",
+    "trimestral",
+    "trimestral honor",
+    "eligible trimestral honor",
+    "jose rizal honor",
+    "honor list"
+  ],
+  "GRADUATION_TERM": [
+    "graduation",
+    "graduate",
+    "finish"
+  ],
+  "GRADUATION_HONORS": [
+    "cum laude",
+    "magna cum laude",
+    "summa cum laude",
+    "honorable mention",
+    "graduate cum laude",
+    "graduate magna cum laude",
+    "graduate summa cum laude",
+    "graduate honorable mention"
+  ],
+  "AWARDS_TERM": [
+    "loyalty award"
+  ],
+  "NON_ACADEMIC_GRADING": [
+    "pass fail grading",
+    "pas fail grading",
+    "pass fail system",
+    "pas fail system",
+    "non academic grade"
+  ],
+  "GPA_INCLUSION": [
+    "term gpa",
+    "cumulative gpa",
+    "gpa inclusion"
+  ],
+  "CROSS_ENROLLMENT": [
+    "cross enroll",
+    "cross-enroll",
+    "cross enrolled",
+    "another school"
+  ],
+  "GPA_ALL_GRADES": [
+    "all grades gpa",
+    "grade gpa"
+  ],
+  "AUDIT_GPA": [
+    "audit gpa",
+    "audit list"
+  ],
+  "CONVERT_AUDIT": [
+    "convert audit"
+  ],
+  "COURSE_EQUIVALENT": [
+    "course equivalent",
+    "equivalent class",
+    "equivalent course"
+  ],
+  "UNIVERSITY_HONORS": [
+    "university honor list",
+    "university list",
+    "university honors"
+  ],
+  "HONORS_ABSENCES": [
+    "unlimited absence",
+    "unlimited cut",
+    "honor absence"
+  ],
+  "HONORS_PASS_FAIL": [
+    "pass fail honor",
+    "pas fail honor",
+    "pass fail unit",
+    "pas fail unit"
+  ],
+  "HONORS_CLARIFICATION": [
+    "clarification honor",
+    "honors council"
+  ],
+  "HONORS_ENROLLMENT": [
+    "advance enrollment",
+    "early enrollment"
+  ],
+  "GRADUATION_LAST_TERM": [
+    "last term graduation",
+    "last term"
+  ],
+  "JOSE_RIZAL_AWARD": [
+    "jose rizal society",
+    "jose rizal award"
+  ],
+  "SPECIAL_AWARDS_GRAD": [
+    "special award"
+  ],
+  "SPECIAL_HONORS_MAJOR": [
+    "special honor",
+    "major field honor",
+    "department honor"
+  ],
+  "FLOWCHART_TERM": [
+    "flowchart",
+    "prerequisite",
+    "prerequisites"
+  ],
+  "ACTION_DEFER": [
+    "defer",
+    "deferring"
+  ],
+  "ACTION_FAIL": [
+    "fail",
+    "failed"
+  ],
+  "ACTION_UPDATE": [
+    "update",
+    "generate",
+    "create"
+  ],
+  "ACTION_ADVISE": [
+    "suggest action",
+    "suggest"
+  ],
+  "CONSULTATION_TERM": [
+    "consultation",
+    "consultation hours",
+    "availability"
+  ],
+  "ACTION_SCHEDULE": [
+    "schedule",
+    "book",
+    "set up"
+  ],
+  "ACTION_RESCHEDULE": [
+    "reschedule",
+    "move",
+    "change"
+  ],
+  "GPA_CALCULATE": [
+    "calculate my gpa",
+    "what is my gpa",
+    "gpa calculation",
+    "calculate gpa",
+    "compute gpa"
+  ],
+  "GPA_UNDERSTAND": [
+    "understand gpa",
+    "gpa policy",
+    "how does gpa work",
+    "what is gpa"
+  ],
+  "GPA_LOW_CONCERN": [
+    "low gpa concern",
+    "worried about gpa",
+    "gpa is low",
+    "low gpa"
+  ],
+  "GPA_IMPROVE": [
+    "improve my gpa",
+    "raise my gpa",
+    "bounce back my gpa",
+    "improve gpa",
+    "raise gpa"
+  ],
+  "STATUS_CHECK": [
+    "check my status",
+    "status"
+  ]
+}
