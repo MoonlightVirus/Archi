@@ -2,51 +2,35 @@
   "bindings": [
     {
       "action_category": "ACTION_CANCEL",
-      "target_category": "COURSE_CODE",
-      "action_pos": ["VB", "VBP", "NN"],
-      "target_pos": ["NN", "NNS", "NNP"]
+      "target_category": "COURSE_CODE"
     },
     {
       "action_category": "ACTION_CANCEL",
-      "target_category": "PERSON",
-      "action_pos": ["VB", "VBP", "NN"],
-      "target_pos": ["NNP"]
+      "target_category": "PERSON"
     },
     {
       "action_category": "ACTION_DEFER",
-      "target_category": "COURSE_CODE",
-      "action_pos": ["VB", "VBP", "VBG"],
-      "target_pos": ["NN", "NNS", "NNP"]
+      "target_category": "COURSE_CODE"
     },
     {
       "action_category": "ACTION_FAIL",
-      "target_category": "COURSE_CODE",
-      "action_pos": ["VB", "VBD", "VBN", "VBG", "VBP"],
-      "target_pos": ["NN", "NNS", "NNP"]
+      "target_category": "COURSE_CODE"
     },
     {
       "action_category": "ACTION_ADVISE",
-      "target_category": "COURSE_CODE",
-      "action_pos": ["VB", "VBP"],
-      "target_pos": ["NN", "NNS", "NNP"]
+      "target_category": "COURSE_CODE"
     },
     {
       "action_category": "ACTION_SCHEDULE",
-      "target_category": "PERSON",
-      "action_pos": ["VB", "VBP"],
-      "target_pos": ["NNP"]
+      "target_category": "PERSON"
     },
     {
       "action_category": "ACTION_RESCHEDULE",
-      "target_category": "PERSON",
-      "action_pos": ["VB", "VBP"],
-      "target_pos": ["NNP"]
+      "target_category": "PERSON"
     },
     {
       "action_category": "CONSULTATION_TERM",
-      "target_category": "PERSON",
-      "action_pos": ["NN", "NNS"],
-      "target_pos": ["NNP"]
+      "target_category": "PERSON"
     }
   ],
   "syntactical_constraints": {
