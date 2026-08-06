@@ -22,7 +22,12 @@ class IntentClassifier:
         if intent:
             return intent, data
             
-        # 3. Check independent entities
+        # 3. Check curriculum intents
+        intent, data = self._check_curriculum_intents(entities)
+        if intent:
+            return intent, data
+            
+        # 4. Check independent entities
         return self._check_independent_entities(entities)
 
     def _check_handbook_rules(self, entities: list):
@@ -61,16 +66,36 @@ class IntentClassifier:
                 
         return None, {}
 
+    def _check_curriculum_intents(self, entities: list):
+        categories = set(e.get('category') for e in entities if 'category' in e)
+        entity_lookup = {e.get('category'): e.get('entity') for e in entities if 'category' in e}
+        
+        course_code = entity_lookup.get("COURSE_CODE")
+        if course_code:
+            course_code = course_code.upper()
+            
+            if "ACTION_FAIL" in categories:
+                return "ACTION_FAIL", {"target": course_code}
+                
+            if "ACTION_DEFER" in categories:
+                return "ACTION_DEFER", {"target": course_code}
+                
+            if "FLOWCHART_TERM" in categories:
+                return "PREREQUISITE_CHECK", {"target": course_code}
+                
+            if "CURRICULUM_ACTION" in categories:
+                return "CHECK_ELIGIBILITY", {"target": course_code}
+                
+            return "COURSE_INFO", {"target": course_code}
+            
+        return None, {}
+
     def _check_independent_entities(self, entities: list):
         categories = set(e.get('category') for e in entities if 'category' in e)
         entity_texts = {e.get('category'): e.get('entity') for e in entities if 'category' in e}
         
         if 'ACTION_UPDATE' in categories and 'FLOWCHART_TERM' in categories:
             return 'FLOWCHART_UPDATE', {}
-            
-        if 'FLOWCHART_TERM' in categories and 'COURSE_CODE' in categories:
-            if "prerequisite" in entity_texts.get('FLOWCHART_TERM', '').lower():
-                return 'PREREQUISITE_CHECK', {'target': entity_texts['COURSE_CODE']}
                 
         for gpa_intent in ['GPA_CALCULATE', 'GPA_UNDERSTAND', 'GPA_LOW_CONCERN', 'GPA_IMPROVE']:
             if gpa_intent in categories:
@@ -81,3 +106,14 @@ class IntentClassifier:
             return 'STATUS_CHECK', {'target': target}
             
         return None, {}
+
+    @staticmethod
+    def extract_course_codes(features):
+        """
+        Extracts all course codes recognized in the user's message.
+        """
+        return list({
+            entity["entity"].upper()
+            for entity in features.get("entities", [])
+            if entity.get("category") == "COURSE_CODE"
+        })
