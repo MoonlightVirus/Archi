@@ -6,7 +6,9 @@ Swap the sample data here for real API/database calls when wiring up a backend.
 import streamlit as st
 import uuid
 import re
-from datetime import date, timedelta
+import calendar
+from difflib import SequenceMatcher
+from datetime import date, timedelta, datetime
 
 from chatbot_engine import get_response as archi_get_response
 
@@ -101,6 +103,8 @@ def detect_booking_intent(user_msg):
     return bool(
         re.search(r"\b(book|schedule|set\s*up|reserve|request|arrange|make)\b"
                   r".{0,40}\b(consult\w*|appointment\w*|meeting\w*|session\w*|advisor\w*|professor\w*)\b", msg)
+        or re.search(r"\b(book|schedule|set\s*up|reserve|request|arrange|make)\b"
+                     r".{0,40}\b(professor|prof|dr|mr|mrs|ms|miss|madam|sir)\b", msg)
         or re.search(r"\b(consult\w*|appointment\w*|meeting\w*|session\w*)\b"
                      r".{0,40}\b(with|for)\b", msg)
     )
@@ -133,8 +137,139 @@ def extract_professor(user_msg):
     return f"{title} {name}"
 
 
-def extract_booking_details(user_msg):
-    """Pull booking specifics (topic, notes, date) mentioned by the user, if any."""
+TIME_SLOTS = [f"{h if h <= 12 else h - 12}:{m:02d} {'AM' if h < 12 else 'PM'}"
+              for h in range(8, 19) for m in (0, 30)]
+
+_MONTH_ABBREV = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+                 "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12}
+
+
+def _validate_date(year, month, day):
+    """Return (date, error) after range-checking year/month/day."""
+    today = date.today()
+    problems = []
+    if not (today.year - 1 <= year <= today.year + 5):
+        problems.append(f"year {year} is out of range — please pick between {today.year - 1} and {today.year + 5}")
+    if not (1 <= month <= 12):
+        problems.append(f"month {month} is invalid — months are 1–12")
+    max_day = calendar.monthrange(year, month)[1] if 1 <= month <= 12 else 31
+    if not (1 <= day <= max_day):
+        problems.append(f"day {day} is invalid — {calendar.month_name[month] if 1 <= month <= 12 else month} "
+                        f"{year} only has {max_day} days")
+    if problems:
+        return None, "; ".join(problems) + "."
+    return date(year, month, day), None
+
+
+def _parse_date(text):
+    """Return (date, error) parsed from natural-language date mentions."""
+    today = date.today()
+    tl = text.lower()
+
+    if "tomorrow" in tl:
+        return today + timedelta(days=1), None
+    if "next week" in tl:
+        return today + timedelta(days=7), None
+
+    m = re.search(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", tl)
+    if m:
+        weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        delta = (weekdays.index(m.group(1)) - today.weekday() + 6) % 7 + 1
+        return today + timedelta(days=delta), None
+
+    month_names = "|".join(list(_MONTH_ABBREV) + ["december", "november", "october",
+                                                  "september", "august", "july", "june",
+                                                  "may", "april", "march", "february", "january"])
+    m = re.search(rf"\b({month_names})\.?\s+(\d{{1,2}})(?:,?\s+(\d{{2,4}}))?", text, re.IGNORECASE)
+    if m:
+        month = _MONTH_ABBREV.get(m.group(1)[:3].lower())
+        day = int(m.group(2))
+        year = int(m.group(3)) if m.group(3) else today.year
+        if year < 100:
+            year += 2000
+        return _validate_date(year, month, day)
+
+    m = re.search(r"\b(\d{1,2})[-/](\d{1,2})(?:[-/](\d{2,4}))?\b", text)
+    if m:
+        a, b = int(m.group(1)), int(m.group(2))
+        year = int(m.group(3)) if m.group(3) else today.year
+        if year < 100:
+            year += 2000
+        if 1 <= a <= 12 and 1 <= b <= 31:
+            res = _validate_date(year, a, b)
+            if not res[1]:
+                return res
+        return _validate_date(year, b, a)
+
+    return None, None
+
+
+def _parse_time(text):
+    """Return (time_str like '5:00 PM', error) parsed from natural-language times."""
+    tl = text.lower()
+    m = re.search(r"\b(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)\b", tl)
+    if m:
+        hour, minute = int(m.group(1)), int(m.group(2)) if m.group(2) else 0
+        ampm = m.group(3).replace(".", "")
+        if not (1 <= hour <= 12):
+            return None, f"'{hour}:{minute:02d} {ampm.upper()}.' has an invalid hour — use 1–12."
+        if not (0 <= minute <= 59):
+            return None, (f"'{hour}:{m.group(2)} {ampm.upper()}.' has invalid minutes "
+                          f"— use 0–59 (e.g. 5:30 PM).")
+        h24 = (hour % 12) + (0 if ampm.startswith("a") else 12)
+    else:
+        m = re.search(r"\b(\d{1,2}):(\d{2})\b", tl)
+        if not m:
+            return None, None
+        hour, minute = int(m.group(1)), int(m.group(2))
+        if not (0 <= hour <= 23):
+            return None, f"'{hour}:{minute:02d}' has an invalid hour — use 0–23."
+        if not (0 <= minute <= 59):
+            return None, f"'{hour}:{minute:02d}' has invalid minutes — use 0–59."
+        h24 = hour
+
+    h12 = h24 % 12
+    if h12 == 0:
+        h12 = 12
+    time_str = f"{h12}:{minute:02d} {'AM' if h24 < 12 else 'PM'}"
+    if time_str not in TIME_SLOTS:
+        return None, (f"'{time_str}' is outside the available booking window "
+                      f"({TIME_SLOTS[0]} – {TIME_SLOTS[-1]}, every 30 minutes).")
+    return time_str, None
+
+
+def _parse_modality(text):
+    tl = text.lower()
+    if re.search(r"\b(online|virtual|google meet|zoom)\b", tl):
+        return "Online"
+    if re.search(r"\b(f2f|face[- ]to[- ]face|onsite|in person|in-person|physical)\b", tl):
+        return "F2F"
+    return None
+
+
+def _parse_place(text):
+    tl = text.lower()
+    if "yuchengco" in tl or "yuchenco" in tl:
+        return "Yuchengco Hall — Room 207"
+    if "henry sy" in tl:
+        return "Henry Sy Hall — Room 402"
+    if re.search(r"\bavr\b", tl):
+        return "AVR — Ground Floor"
+    if "google meet" in tl:
+        return "Google Meet"
+    if "zoom" in tl:
+        return "Zoom Video Call"
+    return None
+
+
+def parse_booking_request(user_msg):
+    """Dissect a booking message into (details, errors, notes).
+
+    - details: validated date/time/modality/place/topic/notes
+    - errors:  blocking issues (out-of-range date/time/place conflicts) for the bot to report
+    - notes:   soft adjustments the bot should mention but not block on
+    """
+    errors, notes = [], []
     details = {}
     msg_lower = user_msg.lower()
 
@@ -142,27 +277,46 @@ def extract_booking_details(user_msg):
         if any(k in msg_lower for k in keywords):
             details["topic"] = topic
             break
-
-    if "tomorrow" in msg_lower:
-        details["date"] = date.today() + timedelta(days=1)
-    elif "next week" in msg_lower:
-        details["date"] = date.today() + timedelta(days=7)
-    else:
-        m = re.search(r"\bon\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", msg_lower)
-        if m:
-            weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-            delta = (weekdays.index(m.group(1)) - date.today().weekday() + 6) % 7 + 1
-            details["date"] = date.today() + timedelta(days=delta)
-
     m = re.search(r"\b(?:about|regarding|concerning|to discuss)\s+(.+?)(?:[,.?!]|$)", user_msg, re.IGNORECASE)
     if m:
         phrase = m.group(1).strip()
         if phrase and not any(w in phrase.lower() for w in ("consult", "appointment", "meeting")):
-            notes = phrase[:1].upper() + phrase[1:]
-            details["notes"] = notes
-            if "topic" not in details and len(notes) < 60:
-                details["topic"] = notes
+            notes_text = phrase[:1].upper() + phrase[1:]
+            details["notes"] = notes_text
+            if "topic" not in details and len(notes_text) < 60:
+                details["topic"] = notes_text
 
+    day, derr = _parse_date(user_msg)
+    if derr:
+        errors.append(f"Date: {derr}")
+    elif day:
+        details["date"] = day
+
+    time_str, terr = _parse_time(user_msg)
+    if terr:
+        errors.append(f"Time: {terr}")
+    elif time_str:
+        details["time"] = time_str
+
+    place = _parse_place(user_msg)
+    modality = _parse_modality(user_msg)
+    place_modality = next((mod for mod, places in PLACES_BY_MODALITY.items() if place in places), None)
+    if place:
+        details["place"] = place
+    if modality:
+        details["modality"] = modality
+    if place_modality and modality and place_modality != modality:
+        details["modality"] = place_modality
+        notes.append(f"Note: {place} is a {place_modality} venue, so I set the meeting to {place_modality}.")
+    elif place_modality:
+        details["modality"] = place_modality
+
+    return details, errors, notes
+
+
+def extract_booking_details(user_msg):
+    """Backward-compatible wrapper: only the parsed details (no errors)."""
+    details, _errors, _notes = parse_booking_request(user_msg)
     return details
 
 
@@ -173,14 +327,91 @@ def get_advisors():
     return st.session_state.advisors
 
 
-def register_advisor(name):
-    """Add a professor mentioned in chat to the session advisor list."""
+def _same_person(name_a, name_b):
+    """Fuzzy name match — same surname (or close to it) means the same person."""
+    a, b = name_a.lower(), name_b.lower()
+    if a == b:
+        return True
+    sa, sb = a.split()[-1], b.split()[-1]
+    return sa in sb or sb in sa or SequenceMatcher(None, sa, sb).ratio() >= 0.8
+
+
+def _normalize_date(value):
+    """Return an ISO 'YYYY-MM-DD' string for a date object or formatted date string."""
+    if hasattr(value, "strftime"):
+        return value.strftime("%Y-%m-%d")
+    if isinstance(value, str):
+        for fmt in ("%B %d, %Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(value, fmt).strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+    return None
+
+
+def get_day_bookings(day):
+    """Consultations on a given date: 'Email Sent', 'Pending', or 'Cancelled'."""
+    iso = _normalize_date(day)
+    if not iso:
+        return []
+    result = []
+    for b in st.session_state.get("bookings", []):
+        if _normalize_date(b.get("date")) == iso:
+            result.append({
+                "advisor": b.get("advisor", ""),
+                "time": b.get("time", ""),
+                "place": b.get("place", ""),
+                "modality": b.get("modality", ""),
+                "status": "Email Sent" if b.get("status") == "sent" else "Cancelled",
+            })
+    draft = st.session_state.get("draft_email")
+    if draft and not st.session_state.get("email_sent"):
+        draft_date = draft.get("date") or st.session_state.get("selected_date")
+        if _normalize_date(draft_date) == iso:
+            result.append({
+                "advisor": draft.get("advisor", ""),
+                "time": draft.get("time") or st.session_state.get("selected_time", "9:00 AM"),
+                "place": draft.get("place") or st.session_state.get("selected_place", "Google Meet"),
+                "modality": draft.get("modality") or st.session_state.get("selected_modality", "Online"),
+                "status": "Pending",
+            })
+    return result
+
+
+def register_advisor(name, email=None, role="Mentioned in Chat"):
+    """Add a professor to the session advisor list (deduped by name)."""
     if not name:
         return None
     advisors = get_advisors()
     if not any(a["name"].lower() == name.lower() for a in advisors):
         advisors.append({"name": name, "role": "Mentioned in Chat", "available": True})
     return name
+
+
+def find_advisor_entry(name):
+    """Return the advisor dict for a name (fuzzy match), if known."""
+    for a in get_advisors():
+        if _same_person(a["name"], name):
+            return a
+    return None
+
+
+def update_advisor(original_name, name=None, role=None, email=None, available=None):
+    """Edit an advisor's details in the session list (keeps selection in sync)."""
+    for a in get_advisors():
+        if _same_person(a["name"], original_name):
+            if name is not None and name.strip():
+                a["name"] = name.strip()
+            if role is not None:
+                a["role"] = role.strip() or a.get("role", "")
+            if email is not None:
+                a["email"] = email.strip() or None
+            if available is not None:
+                a["available"] = bool(available)
+            if _same_person(st.session_state.get("selected_advisor", ""), original_name):
+                st.session_state.selected_advisor = a["name"]
+            return a
+    return None
 
 
 def find_advisor(user_msg):
