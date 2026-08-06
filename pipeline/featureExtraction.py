@@ -94,6 +94,33 @@ class FeatureExtractor:
             else:
                 current_token_idx += 1
 
+        # 3.5 Fallback for NNP sequences not caught by NER as PERSON
+        nnp_indices = []
+        for i, (word, pos) in enumerate(pos_tags):
+            if pos == 'NNP' and i not in matched_token_indices:
+                nnp_indices.append(i)
+                
+        if nnp_indices:
+            groups = []
+            curr_group = [nnp_indices[0]]
+            for idx in nnp_indices[1:]:
+                if idx == curr_group[-1] + 1:
+                    curr_group.append(idx)
+                else:
+                    groups.append(curr_group)
+                    curr_group = [idx]
+            groups.append(curr_group)
+            
+            for group in groups:
+                entity_text = " ".join([tokens[idx] for idx in group])
+                extracted_entities.append({
+                    'entity': entity_text,
+                    'category': 'PERSON',
+                    'indices': group,
+                    'source': 'ner_fallback'
+                })
+                matched_token_indices.update(group)
+
         # Sort extracted entities by their position in the text
         extracted_entities.sort(key=lambda x: x['indices'][0])
         

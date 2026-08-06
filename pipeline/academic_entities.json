@@ -241,7 +241,10 @@
   "ACTION_UPDATE": [
     "update",
     "generate",
-    "create"
+    "create",
+    "request",
+    "ask for",
+    "get"
   ],
   "ACTION_ADVISE": [
     "suggest action",
