@@ -4,20 +4,14 @@ chatbot_engine.py
 Merged NLTK-based response engine for ARCHI, combining the three
 member modules from ARCHI_CHATBOT.ipynb (Louis, Renee, Marthy) into
 a single importable Chat instance.
-
-This replaces the notebook's three separate `while True: input()`
-CLI loops with one `get_response(user_input)` function that the
-Streamlit frontend can call directly from state.py's `bot_reply()`.
-
-Ordering matters for nltk.chat.util.Chat: it returns the FIRST
-pattern that matches. Broad catch-alls (e.g. greetings, affirmations,
-emotion words wrapped in "(.*)") are placed AFTER narrow, specific
-intent patterns (flowchart actions, consultation booking, GPA
-calculations) so specific requests aren't swallowed by a generic
-pattern first.
 """
 
 from nltk.chat.util import Chat, reflections
+
+from nlu.course_lookup import COURSE_INDEX
+from nlu.entity_extractor import extract_course
+from nlu.intent_classifier import classify_intent
+from dialogue.response_generator import generate_response
 
 # ==========================================================
 # 1. MARTHY — Flowcharts & Consultation (specific intents)
@@ -152,14 +146,62 @@ FALLBACK_RESPONSE = (
 )
 
 
+def _try_course_intent_query(user_input: str) -> str | None:
+    """
+    Tier 1 (runs BEFORE nltk Chat): only fires when the message has a clear,
+    narrow intent keyword (difficulty/workload/tips/sentiment -- see
+    nlu/intent_classifier.py). These phrasings ("how hard is CBALGCM",
+    "workload for CBOPESY") don't overlap with any existing Marthy/Renee/
+    Louis pattern, so it's safe to answer them immediately.
+
+    Deliberately does NOT fire on a bare course-code mention with no intent
+    keyword (e.g. "check prerequisites for CBALGCM") -- that must still
+    reach the existing pairs below undisturbed. See _try_course_overview_fallback.
+    """
+    intent = classify_intent(user_input)
+    if intent is None:
+        return None
+    course_code = extract_course(user_input, COURSE_INDEX)
+    return generate_response(intent, course_code, COURSE_INDEX)
+
+
+def _try_course_overview_fallback(user_input: str) -> str | None:
+    """
+    Tier 3 (runs AFTER nltk Chat finds no match): if the message names a
+    real course but nothing else matched (no intent keyword, no Marthy/
+    Renee/Louis pattern), give a data-backed course overview instead of
+    the generic FALLBACK_RESPONSE. Handles bare mentions like
+    "tell me about CBALGCM" or just "CBALGCM".
+    """
+    course_code = extract_course(user_input, COURSE_INDEX)
+    if course_code is None:
+        return None
+    return generate_response(None, course_code, COURSE_INDEX)
+
+
 def get_response(user_input: str) -> str:
     """
     Single entry point for the Streamlit frontend.
-    Mirrors the notebook's chatbot.respond() call + None fallback,
-    but as a plain function instead of a CLI loop.
+
+    Order:
+      1. Course query with a clear intent keyword -> answer from data.
+      2. Existing nltk Chat pairs (Marthy/Renee/Louis) -- fully unchanged.
+      3. Course mentioned but nothing else matched -> course overview.
+      4. FALLBACK_RESPONSE.
     """
     if not user_input or not user_input.strip():
         return FALLBACK_RESPONSE
 
+    course_response = _try_course_intent_query(user_input)
+    if course_response is not None:
+        return course_response
+
     response = _chatbot.respond(user_input)
-    return response if response is not None else FALLBACK_RESPONSE
+    if response is not None:
+        return response
+
+    overview_response = _try_course_overview_fallback(user_input)
+    if overview_response is not None:
+        return overview_response
+
+    return FALLBACK_RESPONSE
