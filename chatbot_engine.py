@@ -175,11 +175,6 @@ def get_response(user_input: str) -> str:
 
             return response
         #end
-
-        print("\n========== DEBUG ==========")
-        print(features)
-        print("===========================\n")
-
         # Check intents via IntentClassifier
         intent, entity_kwargs = _classifier.classify_intent(features)
         
