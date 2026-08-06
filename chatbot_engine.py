@@ -194,6 +194,19 @@ def _try_course_intent_query(user_input: str) -> str | None:
         return None
     course_code = extract_course(user_input, COURSE_INDEX)
     return generate_response(intent, course_code, COURSE_INDEX)
+
+def _try_course_overview_fallback(user_input: str) -> str | None:
+    """
+    Tier 3 (runs AFTER nltk Chat finds no match): if the message names a
+    real course but nothing else matched (no intent keyword, no Marthy/
+    Renee/Louis pattern), give a data-backed course overview instead of
+    the generic FALLBACK_RESPONSE. Handles bare mentions like
+    "tell me about CBALGCM" or just "CBALGCM".
+    """
+    course_code = extract_course(user_input, COURSE_INDEX)
+    if course_code is None:
+        return None
+    return generate_response(None, course_code, COURSE_INDEX)
 #end
 
 def get_response(user_input: str) -> str:
