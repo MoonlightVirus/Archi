@@ -4,15 +4,25 @@ import re
 from nltk.tree import Tree
 
 class FeatureExtractor:
-    def __init__(self, json_path='academic_entities.json'):
-        self.entity_dict = self._load_entities(json_path)
+    def __init__(self, json_path='academic_entities.json', binding_rules_path='binding_rules.json'):
+        self.entity_dict = self._load_json(json_path)
+        binding_data = self._load_json(binding_rules_path)
+        self.binding_rules = binding_data.get('bindings', [])
+        self.syntactical_constraints = binding_data.get('syntactical_constraints', {})
+        
         # Create an inverted dictionary: lowercase n-gram phrase -> category
         self.phrase_to_category = {}
+        self.max_ngram = 1
         for category, phrases in self.entity_dict.items():
             for phrase in phrases:
-                self.phrase_to_category[phrase.lower()] = category
+                lower_phrase = phrase.lower()
+                phrase_set = frozenset(lower_phrase.split())
+                self.phrase_to_category[phrase_set] = category
+                phrase_len = len(phrase_set)
+                if phrase_len > self.max_ngram:
+                    self.max_ngram = phrase_len
 
-    def _load_entities(self, json_path):
+    def _load_json(self, json_path):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(current_dir, json_path)
         with open(path, 'r', encoding='utf-8') as f:
@@ -27,23 +37,29 @@ class FeatureExtractor:
 
         extracted_entities = []
         matched_cleaned_indices = set()
+        matched_token_indices = set()
 
-        # Construct N in {4, 3, 2, 1} overlapping sequences
-        for n in [4, 3, 2, 1]:
+        # 1. Dictionary Matching
+        # Construct N overlapping sequences from max_ngram down to 1
+        for n in range(self.max_ngram, 0, -1):
             for i in range(len(cleaned_tokens) - n + 1):
                 # Prevent sub-phrases from matching if a longer n-gram already matched
-                if any((i + j) in matched_cleaned_indices for j in range(n)):
+                if all((i + j) in matched_cleaned_indices for j in range(n)):
                     continue
                 
                 ngram_tokens = cleaned_tokens[i:i+n]
-                ngram_phrase = " ".join(ngram_tokens).lower()
+                ngram_set = frozenset(t.lower() for t in ngram_tokens)
                 
-                if ngram_phrase in self.phrase_to_category:
-                    category = self.phrase_to_category[ngram_phrase]
+                if len(ngram_set) != n:
+                    continue
+                
+                if ngram_set in self.phrase_to_category:
+                    category = self.phrase_to_category[ngram_set]
                     orig_indices = [cleaned_token_indices[i+j] for j in range(n)]
                     
-                    # 3. Syntactical Disambiguation: Keyword Overlap
+                    # 2. Syntactical Disambiguation: Keyword Overlap
                     if self._validate_pos_constraints(category, ngram_tokens, orig_indices, pos_tags):
+                        ngram_phrase = " ".join(ngram_tokens).lower()
                         extracted_entities.append({
                             'entity': ngram_phrase,
                             'category': category,
@@ -52,6 +68,31 @@ class FeatureExtractor:
                         })
                         for j in range(n):
                             matched_cleaned_indices.add(i + j)
+                        matched_token_indices.update(orig_indices)
+
+        # 3. Named Entity Recognition (NER)
+        current_token_idx = 0
+        for chunk in named_entities:
+            if isinstance(chunk, Tree):
+                label = chunk.label()
+                chunk_leaves = chunk.leaves()
+                chunk_len = len(chunk_leaves)
+                
+                if label in ['PERSON', 'ORGANIZATION']:
+                    is_matched = any((current_token_idx + j) in matched_token_indices for j in range(chunk_len))
+                    if not is_matched:
+                        entity_text = " ".join([leaf[0] for leaf in chunk_leaves])
+                        orig_indices = list(range(current_token_idx, current_token_idx + chunk_len))
+                        extracted_entities.append({
+                            'entity': entity_text,
+                            'category': label,
+                            'indices': orig_indices,
+                            'source': 'ner'
+                        })
+                        matched_token_indices.update(orig_indices)
+                current_token_idx += chunk_len
+            else:
+                current_token_idx += 1
 
         # Sort extracted entities by their position in the text
         extracted_entities.sort(key=lambda x: x['indices'][0])
@@ -68,24 +109,36 @@ class FeatureExtractor:
             if i + 1 < len(extracted_entities):
                 nxt = extracted_entities[i+1]
                 
-                if curr['category'] == 'ACTION_CANCEL' and nxt['category'] == 'COURSE_CODE':
-                    # Ensure proximity
-                    if curr['indices'][-1] < nxt['indices'][0]:
-                        curr_pos = pos_tags[curr['indices'][-1]][1]
-                        nxt_pos = pos_tags[nxt['indices'][0]][1]
-                        
-                        # ACTION_CANCEL must be Verb, COURSE_CODE must be Noun
-                        if curr_pos.startswith('V') and nxt_pos.startswith('N'):
-                            bound_entities.append({
-                                'action': curr['category'],
-                                'action_entity': curr['entity'],
-                                'target_category': nxt['category'],
-                                'target_entity': nxt['entity'],
-                                'indices': curr['indices'] + nxt['indices'],
-                                'type': 'bound_parameter'
-                            })
-                            skip_next = True
-                            continue
+                # Check against binding rules
+                bound = False
+                for rule in self.binding_rules:
+                    if curr['category'] == rule['action_category'] and nxt['category'] == rule['target_category']:
+                        # Ensure proximity
+                        if curr['indices'][-1] < nxt['indices'][0]:
+                            curr_pos = pos_tags[curr['indices'][-1]][1]
+                            nxt_pos = pos_tags[nxt['indices'][0]][1]
+                            
+                            action_pos_prefixes = rule.get('action_pos', [])
+                            target_pos_prefixes = rule.get('target_pos', [])
+                            
+                            valid_action = not action_pos_prefixes or any(curr_pos.startswith(p) for p in action_pos_prefixes)
+                            valid_target = not target_pos_prefixes or any(nxt_pos.startswith(p) for p in target_pos_prefixes)
+                            
+                            if valid_action and valid_target:
+                                bound_entities.append({
+                                    'action': curr['category'],
+                                    'action_entity': curr['entity'],
+                                    'target_category': nxt['category'],
+                                    'target_entity': nxt['entity'],
+                                    'indices': curr['indices'] + nxt['indices'],
+                                    'type': 'bound_parameter'
+                                })
+                                bound = True
+                                skip_next = True
+                                break
+                
+                if bound:
+                    continue
             
             bound_entities.append(curr)
             
@@ -104,11 +157,10 @@ class FeatureExtractor:
                 # Check adjacency to ENROLLMENT_TERM or GRADING_TERM
                 is_adjacent = False
                 for e in bound_entities:
-                    # 'category' key is only present in single entities, not bound_parameter dicts
                     cat = e.get('category')
                     if cat in ['ENROLLMENT_TERM', 'GRADING_TERM']:
                         dist = min(abs(i - idx) for idx in e['indices'])
-                        if dist <= 3:  # Define adjacency window
+                        if dist <= 3:
                             is_adjacent = True
                             break
                             
@@ -121,50 +173,43 @@ class FeatureExtractor:
                     })
                     all_matched_indices.add(i)
 
-        # 6. Unstructured Entity Routing
+        # 6. Filter bound entities and separate unmapped parameters
+        final_entities = []
         unmapped_parameters = []
-            
-        current_token_idx = 0
-        for chunk in named_entities:
-            if isinstance(chunk, Tree):
-                label = chunk.label()
-                chunk_leaves = chunk.leaves()
-                chunk_len = len(chunk_leaves)
-                
-                # Out-of-Vocabulary (OOV): Intercept ORGANIZATION or PERSON
-                if label in ['PERSON', 'ORGANIZATION']:
-                    is_matched = any((current_token_idx + j) in all_matched_indices for j in range(chunk_len))
-                    if not is_matched:
-                        entity_text = " ".join([leaf[0] for leaf in chunk_leaves])
-                        unmapped_parameters.append({
-                            'entity': entity_text,
-                            'type': label,
-                            'indices': list(range(current_token_idx, current_token_idx + chunk_len))
-                        })
-                current_token_idx += chunk_len
+        for e in bound_entities:
+            if e.get('source') == 'ner' and e.get('type') != 'bound_parameter':
+                unmapped_parameters.append({
+                    'entity': e['entity'],
+                    'type': e['category'],
+                    'indices': e['indices']
+                })
             else:
-                current_token_idx += 1
+                final_entities.append(e)
 
-                    
         return {
-            'entities': bound_entities + dynamic_course_codes,
+            'entities': final_entities + dynamic_course_codes,
             'unmapped_parameters': unmapped_parameters
         }
 
     def _validate_pos_constraints(self, category, ngram_tokens, orig_indices, pos_tags):
-        """Map JSON categories to rigid POS constraints."""
-        if category == 'RETENTION_TERM':
-            # The unigram "shift" must carry a verb tag (VB, VBP)
-            for j, t in enumerate(ngram_tokens):
-                if t.lower() == 'shift':
-                    orig_pos = pos_tags[orig_indices[j]][1]
-                    if not orig_pos.startswith('V'):
+        """Map JSON categories to rigid POS constraints dynamically."""
+        if category in self.syntactical_constraints:
+            constraint = self.syntactical_constraints[category]
+            
+            req_word = constraint.get("required_word")
+            req_pos_prefix = constraint.get("required_pos_prefix")
+            invalid_pos_prefix = constraint.get("invalid_pos_prefix")
+            
+            if req_word and req_pos_prefix:
+                for j, t in enumerate(ngram_tokens):
+                    if t.lower() == req_word:
+                        orig_pos = pos_tags[orig_indices[j]][1]
+                        if not orig_pos.startswith(req_pos_prefix):
+                            return False
+                            
+            if invalid_pos_prefix:
+                for idx in orig_indices:
+                    if pos_tags[idx][1].startswith(invalid_pos_prefix):
                         return False
                         
-        elif category == 'ACTION_CANCEL':
-            # Action verbs should carry a verb tag
-            for idx in orig_indices:
-                if pos_tags[idx][1].startswith('N'):
-                    return False
-        
         return True
