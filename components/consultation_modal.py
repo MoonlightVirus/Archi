@@ -1,5 +1,6 @@
 import streamlit as st
 from state import TOPIC_OPTIONS
+from components.email_mockup import build_draft, prepare_email_draft
 
 
 @st.dialog("Consultation Details")
@@ -29,5 +30,13 @@ def render_consultation_dialog(advisor_name, booking_date, time_slot):
     with col_confirm:
         # Adding type="primary" ensures it gets the green styling
         if st.button("Confirm Booking", key="modal_confirm_btn", type="primary"):
-            st.success("Booking confirmed!")
+            st.session_state.draft_email = {
+                "advisor": advisor_name,
+                "date": booking_date,
+                "time": time_slot,
+                "topic": topic,
+                "notes": notes,
+            }
+            prepare_email_draft(build_draft())
+            st.session_state["book_consultation_tabs"] = 1
             st.rerun()

@@ -3,7 +3,9 @@ import base64
 import os
 import html
 import time
-from state import bot_reply
+from state import (bot_reply, detect_booking_intent, find_advisor,
+                   parse_booking_request, detect_cancel_intent, cancel_consultation)
+from components.email_mockup import build_draft, prepare_email_draft
 
 
 def get_image_base64(image_path):
@@ -284,7 +286,7 @@ def _inject_chat_css():
         overflow: hidden !important;
     }}
 
-    div[data-testid="stForm"] input[type="text"] {{
+    div[data-testid="stElementContainer"]:has(.chat-input-marker) + div[data-testid="stElementContainer"] div[data-testid="stForm"] input[type="text"] {{
         background-color: transparent !important;
         border: none !important;
         outline: none !important;
@@ -307,7 +309,7 @@ def _inject_chat_css():
         white-space: nowrap !important;
     }}
 
-    div[data-testid="stForm"] input[type="text"]::placeholder {{
+    div[data-testid="stElementContainer"]:has(.chat-input-marker) + div[data-testid="stElementContainer"] div[data-testid="stForm"] input[type="text"]::placeholder {{
         color: #267045 !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
@@ -315,12 +317,12 @@ def _inject_chat_css():
     }}
 
     /* Send Button */
-    div[data-testid="stFormSubmitButton"] {{
+    div[data-testid="stElementContainer"]:has(.chat-input-marker) + div[data-testid="stElementContainer"] div[data-testid="stFormSubmitButton"] {{
         margin: 0 !important;
         padding: 0 !important;
     }}
     
-    div[data-testid="stFormSubmitButton"] button {{
+    div[data-testid="stElementContainer"]:has(.chat-input-marker) + div[data-testid="stElementContainer"] div[data-testid="stFormSubmitButton"] button {{
         width: 38px !important;
         height: 38px !important;
         min-height: 38px !important;
@@ -337,11 +339,11 @@ def _inject_chat_css():
         background-position: center !important;
     }}
 
-    div[data-testid="stFormSubmitButton"] button p {{
+    div[data-testid="stElementContainer"]:has(.chat-input-marker) + div[data-testid="stElementContainer"] div[data-testid="stFormSubmitButton"] button p {{
         display: none !important; 
     }}
 
-    div[data-testid="stFormSubmitButton"] button:hover {{
+    div[data-testid="stElementContainer"]:has(.chat-input-marker) + div[data-testid="stElementContainer"] div[data-testid="stFormSubmitButton"] button:hover {{
         transform: scale(1.05) !important;
     }}
     </style>
@@ -427,11 +429,9 @@ def render_chat():
                 </div>
                 """)
         else:
-            # Do not escape assistant content so that HTML tables and tags render properly
-            assistant_content = str(content)
             chat_html_parts.append(f"""
             <div class="msg-assistant-row">
-                <div class="msg-assistant-bubble">{assistant_content}</div>
+                <div class="msg-assistant-bubble">{safe_content}</div>
             </div>
             """)
 
@@ -455,6 +455,66 @@ def render_chat():
         with st.spinner("Archi is thinking..."):
             time.sleep(1.2)
 
+        # Cancel intent -> drop the pending consultation/draft, reply in-chat.
+        if detect_cancel_intent(last_user_msg):
+            target = cancel_consultation(last_user_msg)
+            if target:
+                reply_text = (f"Done — I've cancelled the consultation with {target}, "
+                              f"cleared the draft email, and removed {target} "
+                              f"from your available advisors.")
+            else:
+                reply_text = ("I didn't find a pending consultation to cancel for that "
+                              "professor. Tell me which one and I'll cancel it.")
+            current_chat["messages"].append({"role": "assistant", "content": reply_text})
+            st.rerun()
+
+        # Booking intent -> dissect details, validate, then prep the draft + redirect.
+        if detect_booking_intent(last_user_msg):
+            advisor = find_advisor(last_user_msg) or st.session_state.profile.get("advisor")
+            details, errors, notes = parse_booking_request(last_user_msg)
+
+            # Error handling: report invalid values, don't redirect.
+            if errors:
+                reply_text = ("I can't set that up yet — here's what needs fixing:\n\n"
+                              + "\n".join(f"• {e}" for e in errors)
+                              + "\n\nGive me the correct details and I'll book it right away!")
+                current_chat["messages"].append({"role": "assistant", "content": reply_text})
+                st.rerun()
+
+            # Apply the parsed settings so the Schedule page opens pre-configured.
+            if details.get("date"):
+                st.session_state.selected_date = details["date"]
+                st.session_state.cal_year = details["date"].year
+                st.session_state.cal_month = details["date"].month
+            if details.get("time"):
+                st.session_state.selected_time = details["time"]
+            if details.get("modality"):
+                st.session_state.selected_modality = details["modality"]
+            if details.get("place"):
+                st.session_state.selected_place = details["place"]
+            st.session_state.selected_advisor = advisor
+            st.session_state.draft_email = {"advisor": advisor, **details}
+            prepare_email_draft(build_draft())
+            st.session_state.email_mode = "edit"          # open the text editor with the draft
+            st.session_state["book_consultation_tabs"] = 1
+
+            summary = " · ".join(filter(None, [
+                f"{details['date']:%B %d, %Y}" if details.get("date") else "",
+                details.get("time", ""),
+                details.get("modality", ""),
+                details.get("place", ""),
+            ]))
+            detail_line = f" ({summary})" if summary else ""
+            note_line = "\n\n" + "\n".join(notes) if notes else ""
+            current_chat["messages"].append({
+                "role": "assistant",
+                "content": f"Sure! I can help you book a consultation with {advisor}{detail_line}. "
+                           f"I've opened the draft consultation email for you — review and edit it before sending."
+                           f"{note_line}"
+            })
+            st.session_state.page = "book_consultation"
+            st.rerun()
+
         reply_text = bot_reply(last_user_msg) if last_user_msg else \
             "I received your file! Let me take a look."
 
@@ -465,6 +525,7 @@ def render_chat():
         st.rerun()
 
     # 4. Clean Unified Input Form
+    st.markdown("<div class='chat-input-marker' style='display:none'></div>", unsafe_allow_html=True)
     with st.form(key="chat_input_form", clear_on_submit=True):
         c_plus, c_input, c_send = st.columns([0.06, 0.88, 0.06], vertical_alignment="center")
 
