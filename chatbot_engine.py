@@ -220,10 +220,6 @@ def get_response(user_input: str) -> str:
     if course_response is not None:
         return course_response
 
-    overview_response = _try_course_overview_fallback(user_input)
-    if overview_response is not None:
-        return overview_response
-
     # Parse inputs using the pipeline
     try:
         preprocessed = preprocess_text(user_input)
@@ -269,7 +265,10 @@ def get_response(user_input: str) -> str:
     except Exception as e:
         print(f"Pipeline error: {e}")
 
-    # 3. Fallback to Regex for broad catch-alls or numerical inputs
+    overview_response = _try_course_overview_fallback(user_input)
+    if overview_response is not None:
+        return overview_response
+        
     response = _fallback_chatbot.respond(user_input)
     if response:
         print(response)
