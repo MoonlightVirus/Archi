@@ -4,6 +4,7 @@ import streamlit as st
 from state import (get_advisors, get_day_bookings, register_advisor, update_advisor,
                    find_advisor_entry, _same_person, MODALITIES, PLACES_BY_MODALITY, TIME_SLOTS)
 from components.consultation_modal import render_consultation_dialog
+from components.email_mockup import build_draft, prepare_email_draft, render_email_mockup
 
 def _init_calendar_state():
     today = date.today()
