@@ -25,4 +25,4 @@ def render_dashboard():
         st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
         if st.button("CHAT WITH ARCHI", key="dash_chat", type="primary", width="stretch"):
-            new_chat()
+            new_chat()  

@@ -112,6 +112,24 @@ def _inject_chat_css():
         word-break: break-word;
     }}
 
+    /* Styled tables inside assistant bubbles (e.g. handbook grading tables) */
+    .msg-assistant-bubble table {{
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 6px;
+        font-size: 0.85rem;
+    }}
+    .msg-assistant-bubble th,
+    .msg-assistant-bubble td {{
+        border: 1px solid rgba(12, 30, 19, 0.4) !important;
+        padding: 5px 9px !important;
+        text-align: left;
+        vertical-align: top;
+    }}
+    .msg-assistant-bubble th {{
+        background: rgba(12, 30, 19, 0.1);
+    }}
+
     .msg-user-row {{
         display: flex;
         justify-content: flex-end;
@@ -410,6 +428,7 @@ def render_chat():
                 file_name = msg[1] if len(msg) > 1 else "DOCUMENT.PDF"
 
         safe_content = html.escape(str(content))
+        content_html = str(content)
         safe_file_name = html.escape(str(file_name or content))
 
         if role == "user":
@@ -431,7 +450,7 @@ def render_chat():
         else:
             chat_html_parts.append(f"""
             <div class="msg-assistant-row">
-                <div class="msg-assistant-bubble">{safe_content}</div>
+                <div class="msg-assistant-bubble">{content_html}</div>
             </div>
             """)
 
