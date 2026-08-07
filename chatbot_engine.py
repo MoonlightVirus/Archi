@@ -109,6 +109,25 @@ def _handle_curriculum_flow(user_input: str, features: dict):
             "local emergency services or go to the nearest emergency department."
         )
 
+    # --- Academic distress (non-crisis) ---
+    if "ACADEMIC_DISTRESS" in categories:
+        # Cancel any pending curriculum flow.
+        _curriculum_context["waiting_for"] = None
+        _curriculum_context["target_course"] = None
+        _curriculum_context["passed_courses"] = []
+
+        return (
+            "I'm sorry you're feeling this way — academic setbacks can feel "
+            "really heavy, but they don't define who you are or what you're "
+            "capable of.\n\n"
+            "Let's take it one step at a time. Tell me what's been hardest "
+            "for you — a specific course, your GPA, or your flowchart — and "
+            "I'll help you put together a plan to get back on track.\n\n"
+            "You don't have to figure this out alone. Your advisor, the "
+            "university counseling services, and your support network are all "
+            "here for you too."
+        )
+
     # --- Step: collect passed courses ---
     if _curriculum_context["waiting_for"] == "passed_courses":
         passed_courses = _classifier.extract_course_codes(features)
