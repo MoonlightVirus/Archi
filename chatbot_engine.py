@@ -81,6 +81,16 @@ _GREETING_RESPONSES = [
     "\u2022 \"How hard is CBALGCM?\"\n"
     "\u2022 \"Am I eligible for CCDSTRU?\"\n"
     "\u2022 \"What are the prerequisites for CBOPESY?\"",
+    "Hello! Archi here, ready to help you navigate your academic path. "
+    "What would you like to know?\n\nSome questions I can answer:\n"
+    "\u2022 \"How hard is CSOPESY?\"\n"
+    "\u2022 \"Check my eligibility for CBALGCM\"\n"
+    "\u2022 \"What does the handbook say about underloading?\"",
+    "Hey there! Great to see you. As your Intelligent Academic Guide, "
+    "I can help with:\n"
+    "\u2022 \"Am I eligible for CBOPESY?\"\n"
+    "\u2022 \"What are the prerequisites for CCDSTRU?\"\n"
+    "\u2022 \"Book a consultation with an advisor for me\"",
 ]
 
 
