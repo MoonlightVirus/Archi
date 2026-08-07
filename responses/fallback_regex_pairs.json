@@ -53,17 +53,17 @@
     [
         ".*(?:what can you do|what do you do|what questions can you answer|what can you help me with|what can you assist|what are you able to do|how can you help me).*",
         [
-            "Great question! I can help you with a wide range of academic concerns:\n\u2022 \"How hard is CBALGCM?\"\n\u2022 \"Am I eligible for CCDSTRU?\"\n\u2022 \"What are the prerequisites for CBOPESY?\"\n\u2022 \"What is the workload for CBALGCM?\"\n\u2022 \"Can I take CBOPESY and CBPROG2 in the same term?\"\n\u2022 \"What does the handbook say about dropping a course?\"\n\u2022 \"What happens if my GPA falls below the retention policy?\"\n\u2022 \"Can you help me plan my curriculum?\"\n\u2022 \"Can you book a consultation with an advisor for me?\"\n\u2022 \"What are the degree requirements for graduation?\"",
-            "I've got you covered! Here are some of the things I can help you with:\n\u2022 \"How hard is CBOPESY?\"\n\u2022 \"Am I eligible for CBALGCM\"\n\u2022 \"What are the prerequisites for CCDSTRU?\"\n\u2022 \"Recommend courses I can take this term\"\n\u2022 \"What does the handbook say about underloading?\"\n\u2022 \"How do I book a consultation with an advisor?\"\n\u2022 \"What is the retention policy?\"\n\u2022 \"Can you help me plan my flowchart?\"",
-            "Animo! Think of me as your academic co-pilot. You can ask me things like:\n\u2022 \"How hard is CBOPESY?\"\n\u2022 \"Am I eligible for CBOPESY?\"\n\u2022 \"What are the prerequisites for CCDSTRU?\"\n\u2022 \"What is the workload for CBALGCM?\"\n\u2022 \"What does the handbook say about dropping a course?\"\n\u2022 \"Can you help me book a consultation?\"\n\u2022 \"What happens if I fail a course?\"\n\u2022 \"How do I plan my curriculum?\""
+            "Great question! I can help you with a wide range of academic concerns:\n\u2022 \"How hard is CBALGCM?\"\n\u2022 \"Am I eligible for CCDSTRU?\"\n\u2022 \"What are the prerequisites for CBOPESY?\"\n\u2022 \"What is the workload for CBALGCM?\"\n\u2022 \"Can I take CBOPESY and CBPROG2 in the same term?\"\n\u2022 \"How do I drop a course?\"\n\u2022 \"What happens if my GPA falls below the retention policy?\"\n\u2022 \"Can I take an overload?\"\n\u2022 \"Is CBOPESY worth taking?\"\n\u2022 \"What are the degree requirements for graduation?\"",
+            "I've got you covered! Here are some of the things I can help you with:\n\u2022 \"How hard is CBOPESY?\"\n\u2022 \"Am I eligible for CBALGCM?\"\n\u2022 \"What are the prerequisites for CCDSTRU?\"\n\u2022 \"Any tips for CBOPESY?\"\n\u2022 \"What is the minimum load?\"\n\u2022 \"What is the retention policy?\"\n\u2022 \"Can I enroll in CBOPESY?\"\n\u2022 \"How is CBOPESY?\"",
+            "Animo! Think of me as your academic co-pilot. You can ask me things like:\n\u2022 \"How hard is CBALGCM?\"\n\u2022 \"Am I eligible for CCDSTRU?\"\n\u2022 \"What are the prerequisites for CBOPESY?\"\n\u2022 \"Any tips for CBOPESY?\"\n\u2022 \"What is the retention policy?\"\n\u2022 \"What are the degree requirements for graduation?\"\n\u2022 \"Can I enroll in CBOPESY?\"\n\u2022 \"Is CBOPESY worth taking?\""
         ]
     ],
     [
         "^(hi|hello|hey|greetings)(.*)$|(.*)\\b(hello|hi|hey|greetings|hola|kamusta|whats up|sup|archi)\\b(.*)",
         [
             "Animo! I am Archi, your Intelligent Academic Guide. How can I help you optimize your term today?\n\nHere are some examples of what you can ask me:\n\u2022 \"How hard is CBALGCM?\"\n\u2022 \"Am I eligible for CCDSTRU?\"\n\u2022 \"What are the prerequisites for CBOPESY?\"",
-            "Hello! Archi here, ready to help you navigate your academic path. What would you like to know?\n\nSome questions I can answer:\n\u2022 \"How hard is CBOPESY?\"\n\u2022 \"Am I eligible for CBALGCM\"\n\u2022 \"What does the handbook say about underloading?\"",
-            "Hey there! Great to see you. As your Intelligent Academic Guide, I can help with:\n\u2022 \"Am I eligible for CBOPESY?\"\n\u2022 \"What are the prerequisites for CCDSTRU?\"\n\u2022 \"Book a consultation with an advisor for me\""
+            "Hello! Archi here, ready to help you navigate your academic path. What would you like to know?\n\nSome questions I can answer:\n\u2022 \"How hard is CBOPESY?\"\n\u2022 \"Am I eligible for CBALGCM?\"\n\u2022 \"Can I take an overload?\"",
+            "Hey there! Great to see you. As your Intelligent Academic Guide, I can help with:\n\u2022 \"Am I eligible for CBOPESY?\"\n\u2022 \"What are the prerequisites for CCDSTRU?\"\n\u2022 \"Is CBOPESY worth taking?\""
         ]
     ],
     [
