@@ -554,7 +554,7 @@ def render_chat():
         with c_input:
             prompt = st.text_input(
                 "Prompt",
-                placeholder="ASK ARCHI ABOUT ACADEMIC CONCERNS...",
+                placeholder="Say Hi Archi...",
                 label_visibility="collapsed",
                 key="user_chat_prompt"
             )
