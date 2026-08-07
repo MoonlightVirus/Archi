@@ -1,5 +1,5 @@
 import streamlit as st
-from state import go
+from state import go, new_chat
 
 def render_dashboard():
     p = st.session_state.profile
@@ -25,4 +25,4 @@ def render_dashboard():
         st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
         if st.button("CHAT WITH ARCHI", key="dash_chat", type="primary", width="stretch"):
-            go("chat")
+            new_chat()

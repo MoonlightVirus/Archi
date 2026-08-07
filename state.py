@@ -57,46 +57,17 @@ PLACES_BY_MODALITY = {
 }
 
 
-def _seed_chats():
-    """First chat matches the mockup conversation; the rest are placeholder history."""
-    first_chat_id = str(uuid.uuid4())
-    chats = {
-        first_chat_id: {
-            "title": "Archi's First Chat!",
-            "messages": [
-                ("user", "text", "Hi Archi!"),
-                ("assistant", "text", "Hi I'm Archi! Your personal academic assistant!"),
-                ("user", "text", "I need help with my flowchart"),
-                ("assistant", "text", "Okay! I understand your situation, allow me to help! Please upload your flowchart first and I will analyze and provide suggestions!"),
-                ("user", "file", "flowchart.pdf"),
-            ],
-        }
-    }
-    ordinals = ["Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh",
-                "Eight", "Ninth", "Tenth", "Eleventh"]
-    for ordinal in ordinals:
-        chats[str(uuid.uuid4())] = {
-            "title": f"Archi's {ordinal} Chat!",
-            "messages": [
-                ("user", "text", "Hi Archi!"),
-                ("assistant", "text", "Hi I'm Archi! Your personal academic assistant! How can I help you today?"),
-            ],
-        }
-    return chats, first_chat_id
-
-
 def init_session_state():
     if "initialized" in st.session_state:
         return
-    chats, first_chat_id = _seed_chats()
     st.session_state.initialized = True
     st.session_state.logged_in = False
     st.session_state.auth_view = "login"          # "login" or "register"
     st.session_state.page = "dashboard"            # dashboard | chat | chats_list | book_consultation
     st.session_state.sidebar_open = True
     st.session_state.profile = DEFAULT_PROFILE.copy()
-    st.session_state.chats = chats
-    st.session_state.active_chat_id = first_chat_id
+    st.session_state.chats = {}
+    st.session_state.active_chat_id = None
     st.session_state.bookings = []
     st.session_state.pending_booking = None         # holds advisor/date/time while the modal is open
     st.session_state.draft_email = None             # holds the built consultation email draft
