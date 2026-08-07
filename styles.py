@@ -109,6 +109,8 @@ def inject_global_css():
     }}
 
     /* Primary pill buttons */
+    /* Wax: Add Professor / Save Changes use st.form_submit_button, which renders
+       `kind="primaryFormSubmit"` (not `kind="primary"`) — see book_consultation.py. */
     /* Form-submit buttons render `kind="primaryFormSubmit"` (not `kind="primary"`),
        so they need their own selectors to get the white-on-green pill look. */
     button[kind="primary"],

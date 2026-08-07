@@ -194,6 +194,7 @@ def _render_advisors():
                         st.rerun()
 
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    # Manual add: form-submit renders with kind="primaryFormSubmit", styled in styles.py.
     with st.expander("Add a professor manually", expanded=True):
         with st.form(key="add_professor_form", clear_on_submit=True):
             prof_name = st.text_input("Professor name", placeholder="e.g. Ms. Romualde", key="add_prof_name")
