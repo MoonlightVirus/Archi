@@ -26,8 +26,8 @@ SENTIMENT_WITH_DATA = (
 SENTIMENT_NO_DATA = "No comments are available yet to gauge sentiment on {name} ({code})."
 
 OVERVIEW = (
-    "{name} ({code}): difficulty {diff}/5 ({diff_label}), workload {work}/5 ({work_label}), "
-    "sentiment {sent_label}.{low_n_note}\n{top_tip_line}"
+    "{name} ({code}):The difficulty is {diff}/5 ({diff_label}), workload is {work}/5 ({work_label}), "
+    "and sentiment is mostly {sent_label}.{low_n_note}\n{top_tip_line}"
 )
 
 NO_RATING_DATA = "No difficulty/workload ratings are available yet for {name} ({code})."
