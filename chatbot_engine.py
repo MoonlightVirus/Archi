@@ -314,6 +314,51 @@ def get_response(user_input: str) -> str:
                 "Example: CBPROG1, CBPROG2, CCDSTRU"
             )
         #end
+
+        if intent == "PREREQUISITE_CHECK":
+            course_code = entity_kwargs["target"].upper()
+
+            course = _curriculum.get_course(course_code)
+
+            if not course:
+                return (
+                    f"I couldn't find prerequisites for {course_code} in the "
+                    "curriculum database. Please double-check the course code."
+                )
+
+            hard = _curriculum.get_hard_prerequisites(course_code)
+            soft = _curriculum.get_soft_prerequisites(course_code)
+            coreq = _curriculum.get_corequisites(course_code)
+
+            def _describe_courses(codes):
+                return ", ".join(
+                    f"{c} ({_curriculum.get_course_name(c)})"
+                    if _curriculum.get_course_name(c) else c
+                    for c in codes
+                )
+
+            lines = [
+                f"Here are the prerequisites for {course_code} "
+                f"({course['name']}):"
+            ]
+
+            if hard:
+                lines.append("\u2022 Must have passed: " + _describe_courses(hard))
+            else:
+                lines.append("\u2022 No hard prerequisites")
+
+            if soft:
+                lines.append(
+                    "\u2022 Recommended to have taken: " + _describe_courses(soft)
+                )
+
+            if coreq:
+                lines.append(
+                    "\u2022 Must be taken together: " + _describe_courses(coreq)
+                )
+
+            return "\n".join(lines)
+
         if intent and intent in INTENT_RESPONSES:
             template = random.choice(INTENT_RESPONSES[intent])
             response = template.format(**entity_kwargs)
