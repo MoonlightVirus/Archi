@@ -319,7 +319,7 @@
   },
 
   "CBPCOMM": {
-    "name": "Embodied Agents",
+    "name": "Purposive Communication",
     "year": 2,
     "term": 3,
     "offered_term": 3,
@@ -327,5 +327,126 @@
     "hard_prerequisites": [],
     "soft_prerequisites": [],
     "corequisites": ["CBEMC-5"]
+  },
+
+  "CCAPDEV": {
+    "name": "Web Application Development",
+    "year": 3,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": ["CBPROG3", "CBINFOM"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBETHIC", "CBINOV3"]
+  },
+
+  "CBETHIC": {
+    "name": "Ethics",
+    "year": 3,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CCAPDEV", "CBINOV3"]
+  },
+
+  "CBINOV3": {
+    "name": "Human-machine Interaction",
+    "year": 3,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CCAPDEV", "CBETHIC"]
+  },
+
+   "CSMATH2": {
+    "name": "Linear Algebra for Computer Science Students",
+    "year": 3,
+    "term": 1,
+    "offered_term": 1,
+    "units": 3,
+    "hard_prerequisites": ["MTH101A"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBSWEG1": {
+    "name": "Software Engineering",
+    "year": 3,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": ["CCAPDEV"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBASEAN", "CBINOV4"]
+  },
+
+  "CBINOV4": {
+    "name": "Business Innovations",
+    "year": 3,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": ["CCAPDEV"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBSWEG1", "CBASEAN"]
+  },
+
+  "CBRESME": {
+    "name": "CS Research Methods",
+    "year": 3,
+    "term": 2,
+    "offered_term": 2,
+    "units": 3,
+    "hard_prerequisites": ["CBINOV3, CBALGCM"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBSECDV": {
+    "name": "Secure Web Development",
+    "year": 3,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": ["CBAPDEV"],
+    "soft_prerequisites": [],
+    "corequisites": []
+  },
+
+  "CBSWEG2": {
+    "name": "Advanced Software Engineering",
+    "year": 3,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": ["CBSWEG1"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBDATSI", "CBADVAI"]
+  },
+
+  "CBDATSI": {
+    "name": "Data Science",
+    "year": 3,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": [],
+    "soft_prerequisites": [],
+    "corequisites": ["CBSWEG2", "CBADVAI"]
+  },
+
+  "CBDADVAI": {
+    "name": "Advance Intelligent Systems",
+    "year": 3,
+    "term": 3,
+    "offered_term": 3,
+    "units": 3,
+    "hard_prerequisites": ["CBINTSY"],
+    "soft_prerequisites": [],
+    "corequisites": ["CBSWEG2", "CBDATSI"]
   }
 }
