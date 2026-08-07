@@ -109,16 +109,26 @@ def inject_global_css():
     }}
 
     /* Primary pill buttons */
-    button[kind="primary"] {{
+    /* Form-submit buttons render `kind="primaryFormSubmit"` (not `kind="primary"`),
+       so they need their own selectors to get the white-on-green pill look. */
+    button[kind="primary"],
+    button[kind="primaryFormSubmit"],
+    button[data-testid="stBaseButton-primary"],
+    button[data-testid="stBaseButton-primaryFormSubmit"] {{
         background-color: {DARK_GREEN} !important;
         border-radius: 999px !important;
         border: none !important;
         padding: 0.65rem 1.2rem !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
     }}
-    button[kind="primary"] p, 
-    button[kind="primary"] span, 
-    button[kind="primary"] div {{
+    button[kind="primary"] p, button[kind="primary"] span, button[kind="primary"] div,
+    button[kind="primaryFormSubmit"] p, button[kind="primaryFormSubmit"] span, button[kind="primaryFormSubmit"] div,
+    button[data-testid="stBaseButton-primary"] p,
+    button[data-testid="stBaseButton-primary"] span,
+    button[data-testid="stBaseButton-primary"] div,
+    button[data-testid="stBaseButton-primaryFormSubmit"] p,
+    button[data-testid="stBaseButton-primaryFormSubmit"] span,
+    button[data-testid="stBaseButton-primaryFormSubmit"] div {{
         color: {WHITE} !important;
         font-weight: 700 !important;
         font-size: 0.95rem !important;
