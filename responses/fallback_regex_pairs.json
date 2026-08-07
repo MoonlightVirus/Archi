@@ -53,7 +53,7 @@
     [
         "^(hi|hello|hey|greetings)(.*)$|(.*)\\b(hello|hi|hey|greetings|hola|kamusta|whats up|sup|archi)\\b(.*)",
         [
-            "Animo! I am Archi, your Intelligent Academic Guide. How can I help you optimize your term today?\n\nHere are some examples of what you can ask me:\n\u2022 \"How hard is CBALGCM?\"\n\u2022 \"Check my eligibility for CCDSTRU\"\n\u2022 \"What are the prerequisites for CSOPESY?\"",
+            "Animo! I am Archi, your Intelligent Academic Guide. How can I help you optimize your term today?\n\nHere are some examples of what you can ask me:\n\u2022 \"How hard is CBALGCM?\"\n\u2022 \"Check my eligibility for CCDSTRU\"\n\u2022 \"What are the prerequisites for CBOPESY?\"",
             "Hello! Archi here. Ready to map out your academic path. What can I do for you?\n\nTry asking me things like:\n\u2022 \"Tell me about the handbook rule on dropping a course\"\n\u2022 \"Book a consultation with an advisor\"\n\u2022 \"What courses should I take next term?\""
         ]
     ],
