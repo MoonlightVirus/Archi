@@ -351,7 +351,7 @@ def _inject_chat_css():
         transition: transform 0.15s ease !important;
         cursor: pointer !important;
         background-color: transparent !important;
-        background-image: url('images/Send.png') !important;
+        background-image: url('{send_icon_b64}') !important;
         background-size: cover !important; 
         background-repeat: no-repeat !important;
         background-position: center !important;
