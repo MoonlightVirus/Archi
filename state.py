@@ -140,21 +140,28 @@ def detect_booking_intent(user_msg):
         re.search(r"\b(book|schedule|set\s*up|reserve|request|arrange|make)\b"
                   r".{0,40}\b(consult\w*|appointment\w*|meeting\w*|session\w*|advisor\w*|professor\w*)\b", msg)
         or re.search(r"\b(book|schedule|set\s*up|reserve|request|arrange|make)\b"
-                     r".{0,40}\b(professor|prof|dr|mr|mrs|ms|miss|madam|sir)\b", msg)
+                     r".{0,40}\b(professor|prof|doc|dr|mr|mrs|ms|miss|madam|mam|maam|sir)\b", msg)
         or re.search(r"\b(consult\w*|appointment\w*|meeting\w*|session\w*)\b"
                      r".{0,40}\b(with|for)\b", msg)
     )
 
 
 _TITLE_MAP = {
-    "professor": "Prof.", "prof": "Prof.", "dr": "Dr.", "mr": "Mr.", "mrs": "Mrs.",
-    "ms": "Ms.", "miss": "Miss", "sir": "Sir", "madam": "Madam", "ma'am": "Ma'am",
+    "professor": "Prof.", "prof": "Prof.", "doc": "Dr.", "dr": "Dr.", "mr": "Mr.", "mrs": "Mrs.",
+    "ms": "Ms.", "miss": "Miss", "sir": "Sir", "madam": "Madam", "mam": "Ma'am",
+    "maam": "Ma'am", "ma'am": "Ma'am",
 }
 
 _STOP_WORDS = {"off", "the", "of", "with", "for", "about", "my", "to", "and", "in",
                "on", "a", "an", "is", "at", "please", "this", "that", "from",
                "consult", "consultation", "appointment", "meeting", "booking",
                "schedule", "advisor", "professor"}
+
+_NAME_BREAK_WORDS = _STOP_WORDS | {
+    "online", "f2f", "virtual", "face", "am", "pm", "today", "tomorrow",
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+    "morning", "afternoon", "evening", "now", "soon", "later", "next",
+}
 
 _TOPIC_KEYWORDS = {
     "Course Prerequisite Override": ["prereq", "prerequisite", "override", "load"],
@@ -167,7 +174,7 @@ _TOPIC_KEYWORDS = {
 def extract_professor(user_msg):
     """Extract a professor name (e.g. 'Ms. Romualde') mentioned in the message."""
     m = re.search(
-        r"\b(professor|prof|dr|mr|mrs|ms|miss|madam|sir|ma'?am)(?:\.)?\s+"
+        r"\b(professor|prof|doc|dr|mr|mrs|ms|miss|madam|mam|maam|sir|ma'?am)(?:\.)?\s+"
         r"[A-Za-z][A-Za-z'’-]*(?:\s+[A-Za-z][A-Za-z'’-]*)?",
         user_msg, re.IGNORECASE)
     if not m:
@@ -176,7 +183,7 @@ def extract_professor(user_msg):
     title = _TITLE_MAP.get(parts[0].rstrip(".").lower(), parts[0].capitalize())
     names = []
     for word in parts[1:]:
-        if word.lower() in _STOP_WORDS:
+        if len(word) <= 1 or word.lower() in _NAME_BREAK_WORDS:
             break
         names.append(word)
     if not names:
