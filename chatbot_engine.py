@@ -66,6 +66,36 @@ FALLBACK_RESPONSE = (
 )
 
 # ==========================================================
+# 4a. Greetings (checked early so "hi archi" isn't mistaken
+#     for a course-code query like CBARCHI)
+# ==========================================================
+_GREETING_RE = re.compile(
+    r"^(hi|hello|hey|greetings|hola|kamusta|whats up|sup)(.*)$|"
+    r"\b(hi|hello|hey|greetings|hola|kamusta)\b.*\barchi\b",
+    re.IGNORECASE,
+)
+
+_GREETING_RESPONSES = [
+    "Animo! I am Archi, your Intelligent Academic Guide. How can I help you "
+    "optimize your term today?\n\nHere are some examples of what you can ask me:\n"
+    "\u2022 \"How hard is CBALGCM?\"\n"
+    "\u2022 \"Check my eligibility for CCDSTRU\"\n"
+    "\u2022 \"What are the prerequisites for CSOPESY?\"",
+    "Hello! Archi here. Ready to map out your academic path. What can I do for "
+    "you?\n\nTry asking me things like:\n"
+    "\u2022 \"Tell me about the handbook rule on dropping a course\"\n"
+    "\u2022 \"Book a consultation with an advisor\"\n"
+    "\u2022 \"What courses should I take next term?\"",
+]
+
+
+def _try_greeting(user_input: str) -> str | None:
+    """Return a greeting response if the input looks like a greeting."""
+    if _GREETING_RE.match(user_input):
+        return random.choice(_GREETING_RESPONSES)
+    return None
+
+# ==========================================================
 # 4. HandbookRules — Mapping from NLP Intents to CSV Rules
 # ==========================================================
 _csv_path = os.path.join(_project_root, 'references', 'HandbookRules.csv')
@@ -234,6 +264,10 @@ def get_response(user_input: str) -> str:
     """
     if not user_input or not user_input.strip():
         return FALLBACK_RESPONSE
+
+    greeting_response = _try_greeting(user_input)
+    if greeting_response is not None:
+        return greeting_response
 
     course_response = _try_course_intent_query(user_input)
     if course_response is not None:
