@@ -1,0 +1,14 @@
+[
+  [
+    "(?i)^(hi|hello|hey)[!. ]*$",
+    [
+      "Hello! How can I help with your studies?"
+    ]
+  ],
+  [
+    "(?i)^(thanks|thank you)[!. ]*$",
+    [
+      "You're welcome!"
+    ]
+  ]
+]

@@ -2,9 +2,12 @@ import streamlit as st
 import base64
 import os
 import html
-import time
-from state import (bot_reply, detect_booking_intent, find_advisor,
-                   parse_booking_request, detect_cancel_intent, cancel_consultation)
+from datetime import datetime, timezone
+from uuid import uuid4
+from chatbot_engine import process_chat_message
+from routing.models import MessageRequest
+from routing.context import migrate_chat
+from logic.booking.service import BookingService
 from components.email_mockup import build_draft, prepare_email_draft
 
 
@@ -396,6 +399,11 @@ def render_chat():
         popover = st.popover("Chat Settings", key="chat_settings_popover")
         with popover:
             if st.button("Delete Chat", key="delete_chat_settings_btn", use_container_width=True):
+                drafts = st.session_state.get('consultation_drafts', {})
+                for draft_id in [k for k,v in drafts.items() if v.get('chat_id') == active_id]:
+                    drafts.pop(draft_id)
+                if (st.session_state.get('draft_email') or {}).get('chat_id') == active_id:
+                    st.session_state.draft_email = None
                 del st.session_state.chats[active_id]
                 remaining = list(st.session_state.chats.keys())
                 st.session_state.active_chat_id = remaining[0] if remaining else None
@@ -460,89 +468,23 @@ def render_chat():
     clean_html = "\n".join(line.strip() for line in raw_html.splitlines())
     st.markdown(clean_html, unsafe_allow_html=True)
 
-    # 3. Handle Delayed AI Reply
-    if st.session_state.get("awaiting_reply"):
-        st.session_state.awaiting_reply = False
-
-        # Grab the most recent user text message to respond to
-        last_user_msg = ""
-        for msg in reversed(current_chat["messages"]):
-            if isinstance(msg, dict) and msg.get("role") == "user" and "content" in msg:
-                last_user_msg = msg["content"]
-                break
-
-        with st.spinner("Archi is thinking..."):
-            time.sleep(1.2)
-
-        # Cancel intent -> drop the pending consultation/draft, reply in-chat.
-        if detect_cancel_intent(last_user_msg):
-            target = cancel_consultation(last_user_msg)
-            if target:
-                reply_text = (f"Done — I've cancelled the consultation with {target}, "
-                              f"cleared the draft email, and removed {target} "
-                              f"from your available advisors.")
-            else:
-                reply_text = ("I didn't find a pending consultation to cancel for that "
-                              "professor. Tell me which one and I'll cancel it.")
-            current_chat["messages"].append({"role": "assistant", "content": reply_text})
+    # Process the exact pending message in its originating chat.
+    migrate_chat(current_chat)
+    pending_id = current_chat.get('pending_message_id')
+    if pending_id:
+        message = next((m for m in current_chat['messages'] if isinstance(m, dict) and m.get('id') == pending_id), None)
+        if message:
+            request = MessageRequest(active_id, pending_id, message.get('content', ''), message.get('type', 'text'), timestamp=message.get('timestamp', datetime.now(timezone.utc)))
+            with st.spinner('Archi is thinking...'):
+                result = process_chat_message(current_chat, request, BookingService(st.session_state))
+            if result.navigation:
+                prepare_email_draft(build_draft())
+                st.session_state.email_mode = 'edit'
+                st.session_state['book_consultation_tabs'] = 1
+                st.session_state.page = result.navigation
             st.rerun()
-
-        # Booking intent -> dissect details, validate, then prep the draft + redirect.
-        if detect_booking_intent(last_user_msg):
-            advisor = find_advisor(last_user_msg) or st.session_state.profile.get("advisor")
-            details, errors, notes = parse_booking_request(last_user_msg)
-
-            # Error handling: report invalid values, don't redirect.
-            if errors:
-                reply_text = ("I can't set that up yet — here's what needs fixing:\n\n"
-                              + "\n".join(f"• {e}" for e in errors)
-                              + "\n\nGive me the correct details and I'll book it right away!")
-                current_chat["messages"].append({"role": "assistant", "content": reply_text})
-                st.rerun()
-
-            # Apply the parsed settings so the Schedule page opens pre-configured.
-            if details.get("date"):
-                st.session_state.selected_date = details["date"]
-                st.session_state.cal_year = details["date"].year
-                st.session_state.cal_month = details["date"].month
-            if details.get("time"):
-                st.session_state.selected_time = details["time"]
-            if details.get("modality"):
-                st.session_state.selected_modality = details["modality"]
-            if details.get("place"):
-                st.session_state.selected_place = details["place"]
-            st.session_state.selected_advisor = advisor
-            st.session_state.draft_email = {"advisor": advisor, **details}
-            prepare_email_draft(build_draft())
-            st.session_state.email_mode = "edit"          # open the text editor with the draft
-            st.session_state["book_consultation_tabs"] = 1
-
-            summary = " · ".join(filter(None, [
-                f"{details['date']:%B %d, %Y}" if details.get("date") else "",
-                details.get("time", ""),
-                details.get("modality", ""),
-                details.get("place", ""),
-            ]))
-            detail_line = f" ({summary})" if summary else ""
-            note_line = "\n\n" + "\n".join(notes) if notes else ""
-            current_chat["messages"].append({
-                "role": "assistant",
-                "content": f"Sure! I can help you book a consultation with {advisor}{detail_line}. "
-                           f"I've opened the draft consultation email for you — review and edit it before sending."
-                           f"{note_line}"
-            })
-            st.session_state.page = "book_consultation"
-            st.rerun()
-
-        reply_text = bot_reply(last_user_msg) if last_user_msg else \
-            "I received your file! Let me take a look."
-
-        current_chat["messages"].append({
-            "role": "assistant",
-            "content": reply_text
-        })
-        st.rerun()
-
+        else:
+            current_chat['pending_message_id'] = None
     # 4. Clean Unified Input Form
     st.markdown("<div class='chat-input-marker' style='display:none'></div>", unsafe_allow_html=True)
     with st.form(key="chat_input_form", clear_on_submit=True):
@@ -568,7 +510,7 @@ def render_chat():
         if uploaded_file:
             current_chat.setdefault("messages", []).append({
                 "role": "user",
-                "type": "file",
+                "type": "file", "id": str(uuid4()), "chat_id": active_id, "timestamp": datetime.now(timezone.utc),
                 "name": uploaded_file.name
             })
             has_content = True
@@ -576,11 +518,11 @@ def render_chat():
         if prompt and prompt.strip():
             current_chat.setdefault("messages", []).append({
                 "role": "user",
-                "content": prompt.strip()
+                "id": str(uuid4()), "chat_id": active_id, "timestamp": datetime.now(timezone.utc), "content": prompt.strip()
             })
             has_content = True
 
         if has_content:
-            st.session_state.awaiting_reply = True
+            current_chat["pending_message_id"] = current_chat["messages"][-1]["id"]
 
         st.rerun()

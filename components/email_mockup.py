@@ -60,18 +60,18 @@ def _compose_body(draft):
     return "\n".join(lines)
 
 
-def build_draft():
+def build_draft(draft_id=None):
     """Assemble the email draft payload from the latest booking selection.
 
     Date/time/place/modality always come from the schedule-tab session state
     (single source of truth) so the calendar and email can never disagree.
     """
     p = st.session_state.profile
-    d = st.session_state.get("draft_email") or {}
+    d = (st.session_state.get("consultation_drafts", {}).get(draft_id) if draft_id else st.session_state.get("draft_email")) or {}
     advisor = d.get("advisor") or st.session_state.get("selected_advisor") or p.get("advisor", "Your Advisor")
     entry = find_advisor_entry(advisor) or {}
     return {
-        "advisor": advisor,
+        "id": d.get("id"), "chat_id": d.get("chat_id"), "message_id": d.get("message_id"), "advisor": advisor,
         "to": d.get("email") or entry.get("email") or _advisor_email(advisor),
         "date": _fmt(st.session_state.get("selected_date") or date.today()),
         "time": st.session_state.get("selected_time", "9:00 AM"),
@@ -127,8 +127,12 @@ def _render_editor(draft):
 
 
 def _send_email(draft):
+    if draft.get("id") and any(b.get("id") == draft["id"] for b in st.session_state.bookings):
+        return
+    st.session_state.get("consultation_drafts", {}).pop(draft.get("id"), None)
     st.session_state.bookings.append({
         "type": "email",
+        "id": draft.get("id"), "chat_id": draft.get("chat_id"),
         "advisor": draft["advisor"],
         "date": draft["date"],
         "time": draft["time"],

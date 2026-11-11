@@ -18,9 +18,10 @@ class FeatureExtractor:
         max_ngram = 1
         for category, phrases in self.entity_dict.items():
             for phrase in phrases:
-                phrase_set = frozenset(phrase.lower().split())
-                phrase_to_category[phrase_set] = category
+                phrase_set = tuple(re.findall(r"[\w]+(?:[-'/][\w]+)*|[^\w\s]", phrase.lower()))
+                phrase_to_category.setdefault(phrase_set, []).append(category)
                 max_ngram = max(max_ngram, len(phrase_set))
+        self.dictionary_collisions = {p: c for p, c in phrase_to_category.items() if len(c) > 1}
         return phrase_to_category, max_ngram
 
     def _load_json(self, json_path):
@@ -82,6 +83,8 @@ class FeatureExtractor:
                 )
                 if entity:
                     extracted_entities.append(entity)
+                    for category in entity.get('categories', [])[1:]:
+                        extracted_entities.append(dict(entity, category=category))
                     matched_cleaned_indices.update(range(i, i + n))
                     matched_token_indices.update(entity['indices'])
 
@@ -93,19 +96,20 @@ class FeatureExtractor:
 
         cleaned_tokens = preprocessed_data['cleaned_tokens']
         ngram_tokens = cleaned_tokens[i:i+n]
-        ngram_set = frozenset(map(str.lower, ngram_tokens))
+        ngram_set = tuple(map(str.lower, ngram_tokens))
 
         if len(ngram_set) != n or ngram_set not in self.phrase_to_category:
             return None
 
-        category = self.phrase_to_category[ngram_set]
+        categories = self.phrase_to_category[ngram_set]
+        category = categories[0]
         orig_indices = preprocessed_data['cleaned_token_indices'][i:i+n]
 
         if self._validate_pos_constraints(category, ngram_tokens, orig_indices, preprocessed_data['pos_tags']):
             ngram_phrase = " ".join(ngram_tokens).lower()
             return {
                 'entity': ngram_phrase,
-                'category': category,
+                'category': category, 'categories': categories,
                 'indices': orig_indices,
                 'source': 'dictionary'
             }
@@ -140,7 +144,7 @@ class FeatureExtractor:
                 nxt = extracted_entities[i+1]
                 bound_entity = self._attempt_binding(curr, nxt, pos_tags)
                 if bound_entity:
-                    bound_entities.append(bound_entity)
+                    bound_entities.extend([curr, nxt, bound_entity])
                     i += 2
                     continue
             bound_entities.append(curr)

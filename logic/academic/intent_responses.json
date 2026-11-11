@@ -1,0 +1,49 @@
+{
+  "PREREQUISITE_CHECK": [
+    "ARCHI is fetching the prerequisites for {target} from the database now...",
+    "Let ARCHI scan your flowchart for {target}... Got it! I've pulled up the prerequisite list for you."
+  ],
+  "FLOWCHART_UPDATE": [
+    "Flowchart generation and updates are not available yet. I can help check prerequisites and eligibility."
+  ],
+  "ACTION_DEFER": [
+    "Flowchart generation and updates are not available yet. I can help check prerequisites and eligibility."
+  ],
+  "ACTION_FAIL": [
+    "Flowchart generation and updates are not available yet. I can help check prerequisites and eligibility."
+  ],
+  "ACTION_ADVISE": [
+    "Flowchart generation and updates are not available yet. I can help check prerequisites and eligibility."
+  ],
+  "CONSULTATION_TERM": [
+    "I can prepare consultation drafts. Availability checks, real email delivery, and calendar updates are not available."
+  ],
+  "ACTION_SCHEDULE": [
+    "I can prepare consultation drafts. Availability checks, real email delivery, and calendar updates are not available."
+  ],
+  "ACTION_RESCHEDULE": [
+    "I can prepare consultation drafts. Availability checks, real email delivery, and calendar updates are not available."
+  ],
+  "ACTION_CANCEL": [
+    "I can prepare consultation drafts. Availability checks, real email delivery, and calendar updates are not available."
+  ],
+  "GPA_CALCULATE": [
+    "To calculate your GPA, we need your grades and number of units for each course. Can you provide those?",
+    "At DLSU, your GPA is calculated by multiplying each grade by its course credits, adding them up, and dividing that total by your overall credits, rounded to two decimal places."
+  ],
+  "GPA_UNDERSTAND": [
+    "Our GPA policy is outlined in the student handbook. Would you like me to direct you to that section?",
+    "GPA is a weighted average of the grades you earn in your courses."
+  ],
+  "GPA_LOW_CONCERN": [
+    "I understand. We have academic advisors who can help you improve your GPA. Would you like to schedule a meeting?",
+    "Don't worry, there are resources available to help. Let's explore some options together."
+  ],
+  "GPA_IMPROVE": [
+    "I understand. We have academic advisors who can help you improve your GPA. Would you like to schedule a meeting?",
+    "Don't worry, there are resources available to help. Let's explore some options together."
+  ],
+  "STATUS_CHECK": [
+    "Live enrollment status lookup is not available."
+  ]
+}

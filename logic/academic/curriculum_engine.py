@@ -5,7 +5,7 @@ import os
 class CurriculumEngine:
     def __init__(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        data_path = os.path.join(current_dir, "..", "data", "curriculum_data.json")
+        data_path = os.path.join(current_dir, "..", "..", "data", "curriculum_data.json")
 
         with open(data_path, "r", encoding="utf-8") as f:
             self.curriculum = json.load(f)

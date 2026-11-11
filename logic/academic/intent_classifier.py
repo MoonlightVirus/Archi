@@ -117,3 +117,18 @@ class IntentClassifier:
             for entity in features.get("entities", [])
             if entity.get("category") == "COURSE_CODE"
         })
+
+
+    def candidate_intents(self, features):
+        """Collect every domain candidate without applying handler priority."""
+        candidates = []
+        entities = features.get('entities', [])
+        for category, rule_id in self.intent_to_rule_map.items():
+            evidence = [e for e in entities if e.get('category') == category]
+            if evidence:
+                candidates.append(('HANDBOOK_RULE', {'rule_id': rule_id}, evidence))
+        for detector in (self._check_bound_parameters, self._check_curriculum_intents, self._check_independent_entities):
+            intent, fields = detector(entities)
+            if intent:
+                candidates.append((intent, fields, entities))
+        return candidates

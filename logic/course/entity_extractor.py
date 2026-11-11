@@ -73,32 +73,6 @@ def _token_candidates(text: str) -> list:
 
 
 def extract_course(text: str, course_index: dict) -> str | None:
-    if not text or not text.strip():
-        return None
-
-    text_low = text.lower()
-
-    # Pass 1: exact code with canonical punctuation, longest first
-    for code in sorted(course_index, key=len, reverse=True):
-        if re.search(rf"\b{re.escape(code.lower())}\b", text_low):
-            return code
-
-    # Pass 2: normalized + prefix-stripped variants, longest candidate first
-    variants = _build_code_variants(course_index)
-    for candidate in sorted(_token_candidates(text), key=len, reverse=True):
-        if candidate in variants:
-            return variants[candidate]
-
-    # Pass 3: exact course name substring
-    for code, info in course_index.items():
-        name_low = info["course_name"].lower()
-        if name_low and name_low in text_low:
-            return code
-
-    # Pass 4: fuzzy match against course names (handles typos / loose phrasing)
-    names_to_code = {info["course_name"]: code for code, info in course_index.items()}
-    close = difflib.get_close_matches(text, list(names_to_code), n=1, cutoff=0.6)
-    if close:
-        return names_to_code[close[0]]
-
-    return None
+    from routing.courses import resolve_courses
+    matches = list(dict.fromkeys(m['survey_key'] for m in resolve_courses(text) if m['survey_key'] in course_index))
+    return matches[0] if len(matches) == 1 else None

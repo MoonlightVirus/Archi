@@ -1,3 +1,4 @@
+from pathlib import Path
 import csv
 import json
 import functools
@@ -47,16 +48,3 @@ def parse_csv_rules(filepath):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return None
-
-# This allows you to test the script directly
-if __name__ == '__main__':
-    _rules_dict = parse_csv_rules('references/HandbookRules.csv')
-    
-    for main_rule_num, rule in _rules_dict.items():
-        print(f"{main_rule_num}: {rule['Rule Text']}")
-        print("Sub-Rules:")
-        for sub_id, sub_text in rule['Sub-Rules'].items():
-            print(f"  {sub_id}: {sub_text}")
-        print()
-
-        

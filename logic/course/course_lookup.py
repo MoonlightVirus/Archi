@@ -8,7 +8,7 @@ and course_name->code map used by entity_extractor.py.
 import json
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
 
 def _load_json(name: str) -> dict:

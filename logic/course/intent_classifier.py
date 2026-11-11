@@ -27,3 +27,10 @@ def classify_intent(text: str) -> str | None:
         if pattern.search(text):
             return intent
     return None
+
+
+def candidate_intents(text):
+    """Read-only evidence for every survey intent, rather than first match."""
+    return [{'intent': intent, 'evidence': match.group(), 'span': match.span()}
+            for intent, pattern in INTENT_PATTERNS
+            for match in [pattern.search(text)] if match]

@@ -1,4 +1,4 @@
-from .preprocessor import preprocess_text
+from routing.preprocessor import preprocess_text
 from .featureExtraction import FeatureExtractor
 from .intent_classifier import IntentClassifier
 
