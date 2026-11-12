@@ -256,7 +256,10 @@ def render_book_consultation():
     if st.session_state.get("draft_email") and "email_mode" not in st.session_state:
         prepare_email_draft(build_draft())
 
-    tabs = st.tabs(["Schedule", "Email Draft"], key="book_consultation_tabs")
+    requested_tab = st.session_state.pop("requested_consultation_tab", None)
+    if requested_tab:
+        st.session_state.book_consultation_tabs = requested_tab
+    tabs = st.tabs(["Schedule", "Email Draft"], key="book_consultation_tabs", on_change="rerun")
     with tabs[0]:
         _render_schedule_tab()
     with tabs[1]:

@@ -1,11 +1,10 @@
 import json
-import os
+from pathlib import Path
 
 
 class CurriculumEngine:
     def __init__(self):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        data_path = os.path.join(current_dir, "..", "data", "curriculum_data.json")
+        data_path = Path(__file__).resolve().parents[3] / "data" / "curriculum_data.json"
 
         with open(data_path, "r", encoding="utf-8") as f:
             self.curriculum = json.load(f)
@@ -231,3 +230,36 @@ class CurriculumEngine:
         message.append(f"{course['units']} units")
 
         return "\n".join(message)
+
+DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+
+def _load_json(name: str) -> dict:
+    path = DATA_DIR / name
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def build_course_index() -> dict:
+    """
+    Returns {course_code: {..scores.., ..sentiment..}} -- one merged record
+    per course so the response generator only needs a single lookup.
+    """
+    scores = _load_json("course_scores.json")
+    sentiment = _load_json("course_sentiments.json")
+
+    index = {}
+    for code, score_info in scores.items():
+        merged = dict(score_info)
+        merged.update(sentiment.get(code, {}))
+        index[code] = merged
+    return index
+
+
+# Built once at import time -- chatbot_engine.py imports COURSE_INDEX directly,
+# so this never re-reads disk per message.
+COURSE_INDEX = build_course_index()
+
+# code -> full name lookup, used by the response templates
+CODE_TO_NAME = {code: info["course_name"] for code, info in COURSE_INDEX.items()}
+
+CURRICULUM = CurriculumEngine()

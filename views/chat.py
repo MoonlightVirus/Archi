@@ -2,9 +2,8 @@ import streamlit as st
 import base64
 import os
 import html
-import time
-from state import (bot_reply, detect_booking_intent, find_advisor,
-                   parse_booking_request, detect_cancel_intent, cancel_consultation)
+from uuid import uuid4
+from state import bot_reply, register_advisor
 from components.email_mockup import build_draft, prepare_email_draft
 
 
@@ -395,7 +394,7 @@ def render_chat():
     with header_right:
         popover = st.popover("Chat Settings", key="chat_settings_popover")
         with popover:
-            if st.button("Delete Chat", key="delete_chat_settings_btn", use_container_width=True):
+            if st.button("Delete Chat", key="delete_chat_settings_btn", width="stretch"):
                 del st.session_state.chats[active_id]
                 remaining = list(st.session_state.chats.keys())
                 st.session_state.active_chat_id = remaining[0] if remaining else None
@@ -461,86 +460,50 @@ def render_chat():
     st.markdown(clean_html, unsafe_allow_html=True)
 
     # 3. Handle Delayed AI Reply
-    if st.session_state.get("awaiting_reply"):
-        st.session_state.awaiting_reply = False
-
-        # Grab the most recent user text message to respond to
-        last_user_msg = ""
-        for msg in reversed(current_chat["messages"]):
-            if isinstance(msg, dict) and msg.get("role") == "user" and "content" in msg:
-                last_user_msg = msg["content"]
-                break
-
+    if current_chat.get("pending_message_id"):
+        message_id = current_chat["pending_message_id"]
+        message = next((msg for msg in current_chat["messages"] if msg.get("id") == message_id), None)
+        if message is None or any(msg.get("reply_to") == message_id for msg in current_chat["messages"]):
+            current_chat.pop("pending_message_id", None)
+            st.rerun()
+        chat_state = current_chat.setdefault("session_state", {})
         with st.spinner("Archi is thinking..."):
-            time.sleep(1.2)
+            reply_text = bot_reply(message["content"], chat_state, message_id=message_id) if "content" in message else \
+                "I received your file. Please type the academic question you'd like help with."
 
-        # Cancel intent -> drop the pending consultation/draft, reply in-chat.
-        if detect_cancel_intent(last_user_msg):
-            target = cancel_consultation(last_user_msg)
-            if target:
-                reply_text = (f"Done — I've cancelled the consultation with {target}, "
-                              f"cleared the draft email, and removed {target} "
-                              f"from your available advisors.")
-            else:
-                reply_text = ("I didn't find a pending consultation to cancel for that "
-                              "professor. Tell me which one and I'll cancel it.")
-            current_chat["messages"].append({"role": "assistant", "content": reply_text})
-            st.rerun()
+        cancelled = chat_state.pop("cancelled_booking", None)
+        if cancelled is not None and st.session_state.get("draft_chat_id") == active_id:
+            draft = st.session_state.get("draft_email") or {}
+            target = cancelled.get("advisor")
+            if not target or target == draft.get("advisor"):
+                st.session_state.draft_email = None
+                st.session_state.pending_booking = None
+                st.session_state.email_sent = False
+                for key in ("email_mode", "email_to", "email_subject", "email_body", "draft_chat_id"):
+                    st.session_state.pop(key, None)
 
-        # Booking intent -> dissect details, validate, then prep the draft + redirect.
-        if detect_booking_intent(last_user_msg):
-            advisor = find_advisor(last_user_msg) or st.session_state.profile.get("advisor")
-            details, errors, notes = parse_booking_request(last_user_msg)
-
-            # Error handling: report invalid values, don't redirect.
-            if errors:
-                reply_text = ("I can't set that up yet — here's what needs fixing:\n\n"
-                              + "\n".join(f"• {e}" for e in errors)
-                              + "\n\nGive me the correct details and I'll book it right away!")
-                current_chat["messages"].append({"role": "assistant", "content": reply_text})
-                st.rerun()
-
-            # Apply the parsed settings so the Schedule page opens pre-configured.
-            if details.get("date"):
-                st.session_state.selected_date = details["date"]
-                st.session_state.cal_year = details["date"].year
-                st.session_state.cal_month = details["date"].month
-            if details.get("time"):
-                st.session_state.selected_time = details["time"]
-            if details.get("modality"):
-                st.session_state.selected_modality = details["modality"]
-            if details.get("place"):
-                st.session_state.selected_place = details["place"]
+        completed = chat_state.pop("completed_booking", None)
+        if completed:
+            advisor = register_advisor(completed["advisor"])
+            for field in ("date", "time", "modality", "place"):
+                st.session_state[f"selected_{field}"] = completed[field]
+            st.session_state.cal_year = completed["date"].year
+            st.session_state.cal_month = completed["date"].month
             st.session_state.selected_advisor = advisor
-            st.session_state.draft_email = {"advisor": advisor, **details}
+            st.session_state.draft_email = completed
+            st.session_state.draft_chat_id = active_id
             prepare_email_draft(build_draft())
-            st.session_state.email_mode = "edit"          # open the text editor with the draft
-            st.session_state["book_consultation_tabs"] = 1
-
-            summary = " · ".join(filter(None, [
-                f"{details['date']:%B %d, %Y}" if details.get("date") else "",
-                details.get("time", ""),
-                details.get("modality", ""),
-                details.get("place", ""),
-            ]))
-            detail_line = f" ({summary})" if summary else ""
-            note_line = "\n\n" + "\n".join(notes) if notes else ""
-            current_chat["messages"].append({
-                "role": "assistant",
-                "content": f"Sure! I can help you book a consultation with {advisor}{detail_line}. "
-                           f"I've opened the draft consultation email for you — review and edit it before sending."
-                           f"{note_line}"
-            })
+            st.session_state.email_mode = "edit"
+            st.session_state.requested_consultation_tab = "Email Draft"
             st.session_state.page = "book_consultation"
-            st.rerun()
-
-        reply_text = bot_reply(last_user_msg) if last_user_msg else \
-            "I received your file! Let me take a look."
 
         current_chat["messages"].append({
             "role": "assistant",
-            "content": reply_text
+            "content": reply_text,
+            "reply_to": message_id,
+            "diagnostics": dict(chat_state.get("last_diagnostics", {})) if "content" in message else {},
         })
+        current_chat.pop("pending_message_id", None)
         st.rerun()
 
     # 4. Clean Unified Input Form
@@ -567,6 +530,7 @@ def render_chat():
 
         if uploaded_file:
             current_chat.setdefault("messages", []).append({
+                "id": str(uuid4()),
                 "role": "user",
                 "type": "file",
                 "name": uploaded_file.name
@@ -575,12 +539,13 @@ def render_chat():
 
         if prompt and prompt.strip():
             current_chat.setdefault("messages", []).append({
+                "id": str(uuid4()),
                 "role": "user",
                 "content": prompt.strip()
             })
             has_content = True
 
         if has_content:
-            st.session_state.awaiting_reply = True
+            current_chat["pending_message_id"] = current_chat["messages"][-1]["id"]
 
         st.rerun()

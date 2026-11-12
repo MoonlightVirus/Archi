@@ -23,7 +23,7 @@ The assistant understands academic questions via an intent-based NLP pipeline (h
 3. **Access the Application**:
    Open the local URL Streamlit displays in your terminal (usually `http://localhost:8501`). You will land on the Login screen first — enter any demo credentials or switch to Register to create a demo profile.
 
-> On first run, `pipeline/preprocessor.py` automatically downloads the NLTK data it needs (`punkt_tab`, `stopwords`, `wordnet`, `averaged_perceptron_tagger_eng`).
+> `pipeline/preprocessor.py` runs completely offline using deterministic regex normalization and `COURSE_ALIAS_MAP` — no runtime NLTK corpus downloads are required.
 
 ---
 
@@ -33,8 +33,8 @@ The assistant understands academic questions via an intent-based NLP pipeline (h
 ARCHI/
 ├── app.py                      # Application entry point: page config, session init, CSS injection, router
 ├── styles.py                   # Design tokens + global CSS overrides (fonts, buttons, modals, calendar grid)
-├── state.py                    # Session state, demo data, chat engine bridge, and consultation booking logic
-├── chatbot_engine.py           # NLP response engine: course queries, handbook rules, eligibility flow, NLTK fallback
+├── state.py                    # Session state, demo data, chat bridge, and calendar/advisor UI helpers
+├── chatbot_engine.py           # Thin facade over NLPPipeline
 │
 ├── components/                 # Reusable UI elements & pop-up dialogs
 │   ├── sidebar.py              # Gradient dark-green sidebar: branding, navigation, recent chats, profile row
@@ -51,32 +51,21 @@ ARCHI/
 │   ├── book_consultation.py    # Advising scheduler: monthly calendar, advisor cards, email draft tab
 │   └── sus_form.py             # Standalone 10-question System Usability Scale survey (not yet wired in)
 │
-├── nlu/                        # Lightweight course-NLP: difficulty / workload / tips / sentiment
-│   ├── intent_classifier.py    # Narrow intent patterns for course queries
-│   ├── course_lookup.py        # Merged course-scores + sentiment index, built once at import
-│   └── entity_extractor.py     # Resolves course codes/names (variants, typos, prefix-stripping)
+├── pipeline/                   # Per-chat, behavior-driven NLP pipeline
+│   ├── context.py              # PipelineContext and workflow/session helpers
+│   ├── preprocessor.py         # Offline normalization and course aliases
+│   ├── interpreter.py          # Unified intent, entity, and control extraction
+│   ├── routing/
+│   │   ├── router.py           # Support/control → workflow lock → domain dispatch
+│   │   └── support.py          # Crisis and academic-distress responses
+│   ├── logic/
+│   │   ├── retrieval.py        # Survey replies, handbook, prerequisites, eligibility
+│   │   ├── booking.py          # Validation and multi-turn consultation drafts
+│   │   ├── fallback.py         # Deterministic greeting and NLTK regex fallback
+│   │   └── data/               # Course index, aliases, academic JSON, handbook CSV
+│   └── __init__.py             # NLPPipeline public API
 │
-├── dialogue/                   # Course-response generation
-│   ├── response_generator.py   # Formats data into final replies (per intent)
-│   └── response_templates.py   # Plain-string templates for course replies
-│
-├── pipeline/                   # Core NLP preprocessing + intent classification
-│   ├── preprocessor.py         # Tokenize → POS tag → lemmatize → clean (NLTK)
-│   ├── featureExtraction.py    # Dictionary + NNP entity extraction, parameter binding
-│   ├── intent_classifier.py    # Maps extracted entities to intents (handbook, curriculum, GPA, …)
-│   ├── curriculum_engine.py    # Prerequisite/eligibility checking + recommendations
-│   ├── academic_entities.json  # Entity phrase dictionary
-│   ├── binding_rules.json      # Action→target binding & POS constraints
-│   └── __init__.py             # Re-exports the pipeline entry points
-│
-├── responses/                  # NLG data
-│   ├── intent_responses.json   # Intent → response templates
-│   ├── fallback_regex_pairs.json  # NLTK Chat regex fallback pairs
-│   └── intent_to_rule_map.json # Entity category → handbook rule ID
-│
-├── references/
-│   ├── csv_parser.py           # Parses HandbookRules.csv into a hierarchical rule dict
-│   └── HandbookRules.csv       # DLSU student handbook rules (Section 10–12)
+├── tests/                      # Pipeline and Streamlit workflow regressions
 │
 ├── data/                       # Data-driven bot answers
 │   ├── course_scores.json      # Survey difficulty/workload ratings + tips per course
@@ -94,13 +83,12 @@ ARCHI/
 ### Core Architecture
 * **`app.py`**: Initializes session state, injects global styling, renders the logo, hides the sidebar on authentication pages, and routes views via `PAGE_MAP` (`dashboard`, `chat`, `chats_list`, `book_consultation`).
 * **`styles.py`**: Color tokens (`DARK_GREEN`, `ACCENT`, `SIDEBAR_TOP`, etc.), `@font-face` rules for Glacial Indifference, button overrides, modal/dialog formatting, and calendar grid styling.
-* **`state.py`**: Stores the demo student profile, curriculum structures, initial chat seeding, and consultation booking logic: natural-language date/time/modality/place parsing, professor extraction, a session advisor registry (add/edit), booking intent & cancel detection, and `go()`/`new_chat()` navigation helpers.
-* **`chatbot_engine.py`**: The response engine. Order of handling:
-  1. **Course intent queries** (`nlu/`) — difficulty, workload, tips, sentiment for a named course.
-  2. **NLP pipeline** — preprocess → feature extraction → multi-turn curriculum/eligibility flow → `IntentClassifier` (handbook rules, eligibility checks, GPA, flowchart, consultations) → `INTENT_RESPONSES`.
-  3. **Course overview fallback** — bare course-code mentions.
-  4. **NLTK Chat** — broad regex fallbacks (greetings, emotions, thanks).
-  5. Generic `FALLBACK_RESPONSE`.
+* **`state.py`**: Stores the demo student profile, calendar/advisor UI helpers, navigation, and a thin chat engine bridge. Booking parsers are re-exported for existing UI consumers.
+* **`chatbot_engine.py`**: Exposes `get_response(user_input, session_state=None)` over `NLPPipeline.process_turn()`. Supply a separate mutable dictionary per chat for multi-turn interactions; omitting it creates an isolated one-turn context.
+* **`pipeline/`**: Normalizes text without NLTK downloads, extracts intents/entities, then routes support and cancellation before workflow locks and domain handlers. Eligibility collects the target, passed courses, and term. Booking collects advisor, date, time, modality, and place, then emits `completed_booking` for the UI to open an editable draft. No email is sent by the pipeline. `booking_service`, when supplied to `NLPPipeline`, is a callable accepting the finalized draft.
+* **`views/chat.py`**: Keeps pipeline state in `current_chat["session_state"]`, consumes completed drafts once, and opens the consultation email editor. Chat-owned draft cancellation leaves other chats' drafts and advisor lists intact.
+
+Run regression tests with `python -m unittest discover -s tests -v`. Dates in consultation text use Asia/Manila time.
 
 ### Components (`components/`)
 * **`sidebar.py`**: Dark-green gradient sidebar with active-nav highlights, scrollable recent-chat list, and the student profile/logout footer.
@@ -125,10 +113,10 @@ ARCHI answers across several domains:
 | Topic | Source |
 | --- | --- |
 | Course difficulty / workload / tips / sentiment | Student survey data (`data/course_scores.json`, `data/course_sentiments.json`) |
-| Handbook rules (grading, honors, graduation, audits, …) | `references/HandbookRules.csv` via `intent_to_rule_map.json` |
+| Handbook rules (grading, honors, graduation, audits, …) | `pipeline/logic/data/HandbookRules.csv` via `intent_to_rule_map.json` |
 | Curriculum eligibility & prerequisites | `data/curriculum_data.json` via `CurriculumEngine` (multi-turn flow) |
-| Consultation booking / rescheduling / cancellation | Session-state booking engine in `state.py` |
-| Greetings, reassurance, small talk | NLTK Chat fallback pairs in `responses/fallback_regex_pairs.json` |
+| Consultation booking / rescheduling / cancellation | Multi-turn workflow in `pipeline/logic/booking.py` |
+| Greetings, reassurance, small talk | NLTK Chat fallback pairs in `pipeline/logic/data/fallback_regex_pairs.json` |
 
 ---
 
