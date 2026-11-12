@@ -1,10 +1,12 @@
 import json
 from pathlib import Path
 
+DATA_DIR = Path(__file__).resolve().parent
+
 
 class CurriculumEngine:
     def __init__(self):
-        data_path = Path(__file__).resolve().parents[3] / "data" / "curriculum_data.json"
+        data_path = DATA_DIR / "curriculum_data.json"
 
         with open(data_path, "r", encoding="utf-8") as f:
             self.curriculum = json.load(f)
@@ -231,7 +233,6 @@ class CurriculumEngine:
 
         return "\n".join(message)
 
-DATA_DIR = Path(__file__).resolve().parents[3] / "data"
 
 def _load_json(name: str) -> dict:
     path = DATA_DIR / name

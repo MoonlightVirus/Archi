@@ -62,15 +62,10 @@ ARCHI/
 │   │   ├── retrieval.py        # Survey replies, handbook, prerequisites, eligibility
 │   │   ├── booking.py          # Validation and multi-turn consultation drafts
 │   │   ├── fallback.py         # Deterministic greeting and NLTK regex fallback
-│   │   └── data/               # Course index, aliases, academic JSON, handbook CSV
+│   │   └── data/               # Course index, survey data, curriculum, aliases, academic JSON, handbook CSV
 │   └── __init__.py             # NLPPipeline public API
 │
 ├── tests/                      # Pipeline and Streamlit workflow regressions
-│
-├── data/                       # Data-driven bot answers
-│   ├── course_scores.json      # Survey difficulty/workload ratings + tips per course
-│   ├── course_sentiments.json  # Survey sentiment/comments per course
-│   └── curriculum_data.json    # Courses, prerequisites, corequisites, offered terms
 │
 ├── static/                     # Glacial Indifference font files (referenced by styles.py)
 └── requirements.txt            # streamlit, nltk
@@ -112,9 +107,9 @@ ARCHI answers across several domains:
 
 | Topic | Source |
 | --- | --- |
-| Course difficulty / workload / tips / sentiment | Student survey data (`data/course_scores.json`, `data/course_sentiments.json`) |
+| Course difficulty / workload / tips / sentiment | Student survey data (`pipeline/logic/data/course_scores.json`, `course_sentiments.json`) |
 | Handbook rules (grading, honors, graduation, audits, …) | `pipeline/logic/data/HandbookRules.csv` via `intent_to_rule_map.json` |
-| Curriculum eligibility & prerequisites | `data/curriculum_data.json` via `CurriculumEngine` (multi-turn flow) |
+| Curriculum eligibility & prerequisites | `pipeline/logic/data/curriculum_data.json` via `CurriculumEngine` (multi-turn flow) |
 | Consultation booking / rescheduling / cancellation | Multi-turn workflow in `pipeline/logic/booking.py` |
 | Greetings, reassurance, small talk | NLTK Chat fallback pairs in `pipeline/logic/data/fallback_regex_pairs.json` |
 
