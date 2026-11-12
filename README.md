@@ -65,8 +65,6 @@ ARCHI/
 |-- dialogue/
 |   `-- turn_renderer.py        # Shared structured-result rendering
 |
-|-- tests/                      # Router acceptance tests and Streamlit integration check
-|
 ├── data/                       # Data-driven bot answers
 │   ├── course_scores.json      # Survey difficulty/workload ratings + tips per course
 │   ├── course_sentiments.json  # Survey sentiment/comments per course
@@ -104,65 +102,4 @@ ARCHI/
 * **`book_consultation.py`**: Two tabs — **Schedule** (interactive monthly calendar with per-day booking chips, advisor cards with select/edit/add, meeting modality/venue pickers) and **Email Draft** (compose/send the consultation request).
 * **`sus_form.py`**: A standalone System Usability Scale (SUS) survey with the 10 standard questions, auto-scoring, and grade interpretation. Not currently wired into the app.
 
----
 
-##  How the Chat Responds
-
-ARCHI answers across several domains:
-
-| Topic | Source |
-| --- | --- |
-| Course difficulty / workload / tips / sentiment | Student survey data (`data/course_scores.json`, `data/course_sentiments.json`) |
-| Handbook rules (grading, honors, graduation, audits, …) | `logic/academic/HandbookRules.csv` via `intent_to_rule_map.json` |
-| Curriculum eligibility & prerequisites | `data/curriculum_data.json` via `CurriculumEngine` (multi-turn flow) |
-| Consultation booking / rescheduling / cancellation | Injected service in `logic/booking/service.py` |
-| Greetings, reassurance, small talk | NLTK Chat fallback pairs in `logic/fallback/fallback_regex_pairs.json` |
-
----
-
-##  Next Steps - Backend
-
-* **Data Persistence**: Everything lives in `st.session_state`. Connect student profiles, chat history, advisor lists, and bookings to a database (e.g., PostgreSQL, Supabase, Firebase).
-* **Email Delivery**: `components/email_mockup.py` only simulates sending. Wire the draft payload to a real email service (SMTP, SendGrid, Gmail API).
-* **Authentication**: Replace the demo login/register logic with your institution's SSO or identity provider.
-* **Live LLM / Real NLU**: `chatbot_engine.py` is rule- and data-driven. Swap in a language model or a real NLU service for broader understanding while keeping the intents above.
-* **Connect the SUS survey**: Register `views/sus_form.py` in `app.py`'s `PAGE_MAP` and the sidebar when you're ready to collect usability data.
-
-## Central message router
-
-All interactive messages enter `chatbot_engine.process_chat_message`. Each chat owns
-its context, pending message ID and processed-result cache. The cache prevents
-ordinary Streamlit reruns from executing an action or appending a reply twice;
-it is session memory, not durable crash recovery.
-
-`routing.interpreter.interpret` and `routing.router.route` are read-only. They
-produce evidence and explicit rule IDs; specificity is an ordering rule, not a
-probability. Domain handlers return a structured status and reply data. Only the
-injected `logic.booking.service.BookingService` changes consultation records. Routine
-logs contain route, intent, rule, status and context transition, not message text.
-
-Eligibility collects passed courses, other previously taken courses, and the
-enrollment term separately. Soft prerequisites retain the existing engine rule:
-they must previously have been taken. Confirm any future academic policy change
-separately. GPA calculations, generated flowcharts, live availability, real email
-delivery and calendar updates remain unavailable. Consultation actions prepare
-mock email drafts; cancellation never removes an advisor.
-
-Course aliases are explicit in `routing/courses.py`. Unknown or fuzzy matches
-require confirmation. Tokenization preserves numbers, negation and character
-positions and does not download NLTK resources. NLTK Chat is limited to greetings
-and thanks, with a resource-independent reply if NLTK is unavailable.
-
-Run checks from the repository root:
-
-```powershell
-python -m unittest discover -s tests -v
-```
-
-`tests/test_router.py` is the deterministic route/state/effect acceptance set.
-`tests/test_streamlit.py` runs the actual app with Streamlit AppTest and checks chat
-switching, pending-flow isolation, draft ownership, booking-page navigation,
-cancellation, return to chat and rerun behavior. The pre-migration baseline had
-first-match greeting/survey routing, process-global eligibility context, and
-booking mutations before the engine. The acceptance set records the corrected
-outcomes; no shadow execution of old booking actions is performed.

@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from routing.courses import CURRICULUM
+from routing.courses import CURRICULUM, canonical
 from .csv_parser import parse_csv_rules
 HANDBOOK = parse_csv_rules(str(Path(__file__).with_name('HandbookRules.csv'))) or {}
 from routing.handlers.common import prepare
@@ -24,7 +24,7 @@ def handle(d, i, context, services=None):
             return result(f'Prerequisites for {code}:\nMust have passed: ' + (', '.join(CURRICULUM.get_hard_prerequisites(code)) or 'None') + '\nMust have previously taken: ' + (', '.join(CURRICULUM.get_soft_prerequisites(code)) or 'None') + '\nMust enroll together: ' + (', '.join(CURRICULUM.get_corequisites(code)) or 'None'))
         pending = ctx.get('pending_question')
         if pending in ('passed_courses', 'taken_courses'):
-            unknown = [c for c in re.findall(r'\b(?:CB|CC|LBY|MTH|STT|THS)[A-Z0-9-]+\b', i.original_text.upper()) if not CURRICULUM.course_exists(c)]
+            unknown = [c for c in re.findall(r'\b(?:CB|CC|LBY|MTH|STT|THS)[A-Z0-9-]+\b', i.original_text.upper()) if not CURRICULUM.course_exists(canonical(c))]
             if unknown or (not courses and not re.search(r"\b(none|no|not|didn't)\b", i.original_text, re.I)):
                 return ask(pending, 'Please list valid course codes, or say none. Unknown: ' + ', '.join(unknown))
             if i.negation and courses:
